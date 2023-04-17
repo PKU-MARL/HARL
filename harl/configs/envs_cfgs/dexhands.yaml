@@ -1,0 +1,2 @@
+task: ShadowHandCatchOver2Underarm
+hands_episode_length: 75 # please refer to "episodeLength" in corresponding yaml under the harl_toolbox/env/dexhands/DexterousHands/bidexhands/cfg

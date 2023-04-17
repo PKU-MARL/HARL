@@ -1,0 +1,253 @@
+<h1 align="center"> Heterogeneous-Agent Reinforcement Learning </h1>
+
+This repository contains the **official implementation** of **Heterogeneous-Agent Reinforcement Learning (HARL)** algorithms, including **HAPPO**, **HATRPO**, **HAA2C**, **HADDPG**, **HATD3**, and **HAD3QN**, based on PyTorch. It allows researchers and practitioners to easily reproduce our results on six challenging benchmarks or apply HARL algorithms to their intended applications.
+
+
+
+## Overview
+
+HARL algorithms are our novel solutions to achieving effective multi-agent cooperation in the general *heterogeneous-agent* settings, without relying on the restrictive *parameter-sharing* trick. As shown in our paper, HARL algorithms enjoy the **monotonic improvement of joint reward** and **convergence to Nash Equilibrium (NE)** guarantees granted by the provably correct **Heterogeneous-Agent Trust Region Learning (HATRL)** and **Heterogeneous-Agent Mirror Learning (HAML)** theories, thus providing a more robust and stable approach to cooperative multi-agent reinforcement learning. Experiment results confirm their superior effectiveness for coordinating heterogeneous agents compared to strong baselines such as MAPPO and QMIX. The following figure is an illustration of the *sequential update scheme* employed by HARL algorithms to achieve coordinated agent updates.
+
+<div align="center">
+  <img src="./assets/maad_sus_3_23.png" width="100%"/>
+</div>
+
+For more details, please refer to our paper.
+
+
+
+## Installation
+
+### Install HARL
+
+```shell
+conda create -n harl python=3.8
+conda activate harl
+# install pytorch>=1.8.0 (CUDA>=11.0) manually
+git clone https://github.com/PKU-MARL/HARL.git
+cd HARL
+pip install -e .
+```
+
+
+
+### Install Environments Dependencies
+
+Along with HARL algorithms, we also implement the interfaces for six common environments ([SMAC](https://github.com/oxwhirl/smac), [SMACv2](https://github.com/oxwhirl/smacv2), [MAMuJoCo](https://github.com/schroederdewitt/multiagent_mujoco), [MPE](https://pettingzoo.farama.org/environments/mpe/), [Google Research Football](https://github.com/google-research/football), [Bi-DexterousHands](https://github.com/PKU-MARL/DexterousHands)) and they can be used directly. (We also implement the interface for [Gym](https://www.gymlibrary.dev/). Gym is a single-agent environment, which can be seen as a special case of multi-agent environments. It is included mainly for reference purposes.) You may choose to install the dependencies to the environments you want to use.
+
+**Install Dependencies of Bi-DexterousHands**
+
+Bi-DexterousHands depend on IsaacGym. The hardware requirements of IsaacGym has to be satisfied. To install IsaacGym, download IsaacGym Preview 4 release from [its official website](https://developer.nvidia.com/isaac-gym/download). Then run `pip install -e .` under its `python` folder.
+
+**Install Google Research Football**
+
+Please follow [the official instructions](https://github.com/google-research/football) to install Google Research Football.
+
+**Install SMAC**
+
+Please follow [the official instructions](https://github.com/oxwhirl/smac) to install SMAC.
+
+**Install SMACv2**
+
+Please follow [the official instructions](https://github.com/oxwhirl/smacv2) to install SMACv2.
+
+**Install MPE**
+
+```shell
+pip install pettingzoo==1.22.2
+pip install supersuit==3.7.0
+```
+
+**Install Gym Suite (Except MuJoCo)**
+
+```shell
+# gym
+pip install gym
+# classic control
+pip install gym[classic_control]
+# box2d
+conda install -c anaconda swig
+pip install gym[box2d]
+# atari
+pip install --upgrade pip setuptools wheel
+pip install opencv-python
+pip install atari-py
+pip install gym[atari]
+pip install autorom[accept-rom-license]
+```
+
+**Install MuJoCo**
+
+First, follow the instructions on https://github.com/openai/mujoco-py, https://www.roboti.us/, and https://github.com/deepmind/mujoco to download the right version of mujoco you need.
+
+Second, `mkdir ~/.mujoco`.
+
+Third, move the .tar.gz or .zip to `~/.mujoco`, and extract it using `tar -zxvf` or `unzip`.
+
+Fourth, add the following line to the `.bashrc`:
+
+```shell
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/<user>/.mujoco/<folder-name, e.g. mujoco210, mujoco-2.2.1>/bin
+```
+
+Fifth, run the following command:
+
+```shell
+sudo apt install libosmesa6-dev libgl1-mesa-glx libglfw3
+pip install mujoco
+pip install gym[mujoco]
+sudo apt-get update -y
+sudo apt-get install -y patchelf
+```
+
+**Install Dependencies of MAMuJoCo**
+
+First follow the instructions above to install MuJoCo. Then run the following commands.
+
+```shell
+pip install "mujoco-py>=2.1.2.14"
+pip install "Jinja2>=3.0.3"
+pip install "glfw>=2.5.1"
+pip install "Cython>=0.29.28"
+```
+
+
+
+### Solve Dependencies
+
+After the installation above, run the following commands to solve dependencies.
+
+```shell
+pip install gym==0.21.0
+pip install pyglet==1.5.0
+pip install importlib-metadata==4.13.0
+```
+
+
+
+## Usage
+
+### Training on Existing Environments
+
+To train an algorithm on a provided environment, users can modify yaml configuration files of the corresponding algorithm and environment under `harl/configs/algos_cfgs` and `harl/configs/envs_cfgs` as they wish, go to `examples` folder, and then start training with a one-liner `python train.py --algo <ALGO> --env <ENV> --exp_name <EXPERIMENT NAME>` or `python train.py --load_config <CONFIG FILE PATH>`, where the latter is mostly used when reproducing an experiment. We provide the **tuned configurations** for algorithms in each environments under `tuned_configs` folder. Users can **reproduce our results** by using `python train.py --load_config <TUNED CONFIG PATH>` and change `<TUNED CONFIG PATH>` to the absolute path of the tuned config file on their machine.
+
+During training, users receive continuous logging feedback in the terminal.
+
+After training, users can check the log file, tensorboard output, experiment configuration, and saved models under the generated `results` folder. Moreover, users can also render the trained models by setting `use_render: True`, `model_dir: <path to trained models>` in algorithm configuration file (for football users also need to set `render: True` in the environment configuration file), and use the same training command as above again. For SMAC and SMACv2, rendering comes in the form of video replay automatically saved to the `StarCraftII/Replays` folder (more details can be found [here](https://github.com/oxwhirl/smac#saving-and-watching-starcraft-ii-replays)).
+
+To enable batch running, we allow users to modify yaml configs in the command line. For each training command, users specify the special parameters in the commands with the same names as in the config files. For example, if you want to run HAPPO on SMAC tasks under three random seeds. You can customize the configs and replace `train.sh` with the following commands:
+
+```shell
+for seed in $(seq 1 3)
+do
+	python train.py --algo happo --env smac --exp_name text --seed $seed
+done
+```
+
+
+
+### Applying to New Environments
+
+If you want to apply HA series algorithms to solve new tasks, you need to implement environment interfaces, following the examples of the seven environments provided. A simplest interface may look like:
+
+```python
+class Env:
+    def __init__(self, args):
+        self.env = ...
+        self.n_agents = ...
+        self.share_observation_space = ...
+        self.observation_space = ...
+        self.action_space = ...
+
+    def step(self, actions):
+        return obs, state, rewards, dones, info, available_actions
+
+    def reset(self):
+        return obs, state, available_actions
+
+    def seed(self, seed):
+        pass
+
+    def render(self):
+        pass
+
+    def close(self):
+        self.env.close()
+```
+
+The purpose of interface is to *hide environment-specific details and expose a unified interaction protocol, so that other modules could process data uniformly*.
+
+You may also want to produce continuous logging output during training. If you intend to use an on-policy algorithm, you need to implement a logger for your environment. The simplest logger can inherit from `BaseLogger` in `harl/common/base_logger.py` and implement the `get_task_name` function. More customised logging requirements can be fulfilled by extending or overriding more functions. We recommend referring to the existing loggers in each environment directory to get to know how it is written. If an off-policy algorithm is used, you can directly customise logging by modifying the off-policy runner code. In the end, please register the logger (if any), add a yaml config file, and add necessary code to `examples/train.py`, `harl/utils/configs_tool.py`, and `harl/utils/envs_tool.py`. Again, following the existing seven environment examples will be convenient.
+
+After these steps, you can apply the algorithms immediately as above.
+
+
+
+### Application Scope of Algorithms
+
+|        | Continuous action space | Discrete action space |
+| :----: | :---------------------: | :-------------------: |
+| HAPPO  | √                       | √                     |
+| HATRPO | √                       | √                     |
+| HAA2C  | √                       | √                     |
+| HADDPG | √                       |                       |
+| HATD3  | √                       |                       |
+| HAD3QN |                         | √                     |
+| MAPPO  | √                       | √                     |
+| MADDPG | √                       |                       |
+
+
+
+## Performance on Cooperative MARL Benchmarks
+
+### MPE
+
+<div align="center">
+  <img src="./assets/mpe_learning_curve.jpg" width="100%"/>
+</div>
+
+### MAMuJoCo
+
+HAPPO and HADDPG outperforms MAPPO and MADDPG; HAPPO and HATD3 are the most effective methods for heterogeneous-agent cooperation tasks.
+
+<div align="center">
+  <img src="./assets/mamujoco_on_policy_learning_curve.jpg" width="100%"/>
+</div>
+
+<div align="center">
+  <img src="./assets/mamujoco_off_policy_learning_curve.jpg" width="100%"/>
+</div>
+<div align="center">
+  <img src="./assets/Humanoid-v2_17x1_learning_curve.jpg" width="40%"/>
+</div>
+
+### SMAC & SMACv2
+
+HAPPO and HATRPO are comparable to or better than MAPPO and QMIX in SMAC and SMACv2, demonstrating their capability in mostly homogeneous-agent settings.
+
+<div align="center">
+  <img src="./assets/smac-winrates.png" width="100%"/>
+</div>
+
+<div align="center">
+  <img src="./assets/smac_learning_curve.jpg" width="100%"/>
+</div>
+
+### GRF
+
+HAPPO consistently outperforms MAPPO and QMIX on GRF, and the performance gap increases as the number and heterogeneity of agents increase.
+
+<div align="center">
+  <img src="./assets/grf-scorerates.png" width="50%"/>
+</div>
+<div align="center">
+  <img src="./assets/football_learning_curve.jpg" width="100%"/>
+</div>
+
+### Bi-DexterousHands
+
+HAPPO consistently outperforms MAPPO, and is also better than the single-agent baseline PPO, while also showing less variance.
+
+<div align="center">
+  <img src="./assets/dexhands_learning_curve.jpg" width="100%"/>
+</div>

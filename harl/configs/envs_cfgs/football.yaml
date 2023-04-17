@@ -1,0 +1,25 @@
+env_name: academy_pass_and_shoot_with_keeper
+stacked: False
+representation: simple115v2
+rewards: scoring,checkpoints
+write_goal_dumps: False
+write_full_episode_dumps: False
+render: False
+write_video: False
+dump_frequency: 1
+logdir: ~
+extra_players: ~
+number_of_left_players_agent_controls: 2 # has to be consistent with the default setting below
+number_of_right_players_agent_controls: 0
+channel_dimensions:
+  - 96
+  - 72
+other_config_options: ~
+# env_num_agents (for REFERENCE):
+#   "academy_pass_and_shoot_with_keeper": 2,
+#   "academy_run_pass_and_shoot_with_keeper": 2,
+#   "academy_3_vs_1_with_keeper": 3,
+#   "academy_counterattack_easy": 4,
+#   "academy_counterattack_hard": 4,
+#   "academy_corner": 11,
+#   "academy_single_goal_versus_lazy": 11

@@ -1,0 +1,2 @@
+map_name: 2s_vs_1sc
+state_type: FP # choose from FP (Feature Pruned) and EP (Environment Provided)

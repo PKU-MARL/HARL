@@ -1,0 +1,4 @@
+scenario: Walker2d-v2
+agent_conf: 6x1
+agent_obsk: 0 # We use the fully observable setting, so this argument is not useful. But we still keep it.
+episode_limit: 1000

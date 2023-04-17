@@ -1,0 +1,67 @@
+{
+    "algo_args":	{
+        "algo":	{
+            "batch_size":	1000,
+            "buffer_size":	1000000,
+            "expl_noise":	0.1,
+            "fixed_order":	false,
+            "gamma":	0.99,
+            "n_step":	1,
+            "polyak":	0.005,
+            "share_param":	false
+        },
+        "device":	{
+            "cuda":	true,
+            "cuda_deterministic":	true,
+            "torch_threads":	4
+        },
+        "eval":	{
+            "eval_episodes":	20,
+            "n_eval_rollout_threads":	10,
+            "use_eval":	true
+        },
+        "logger":	{
+            "log_dir":	"./results"
+        },
+        "model":	{
+            "activation_func":	"relu",
+            "critic_lr":	0.001,
+            "final_activation_func":	"tanh",
+            "hidden_sizes":	[
+                128,
+                128
+            ],
+            "lr":	0.0005
+        },
+        "render":	{
+            "render_episodes":	10,
+            "use_render":	false
+        },
+        "seed":	{
+            "seed":	1,
+            "seed_specify":	true
+        },
+        "train":	{
+            "eval_interval":	1000,
+            "log_interval":	null,
+            "model_dir":	null,
+            "n_rollout_threads":	20,
+            "num_env_steps":	5000000,
+            "train_interval":	50,
+            "update_per_train":	1,
+            "use_linear_lr_decay":	false,
+            "use_proper_time_limits":	true,
+            "warmup_steps":	10000
+        }
+    },
+    "env_args":	{
+        "continuous_actions":	true,
+        "scenario":	"simple_reference_v2"
+    },
+    "main_args":	{
+        "algo":	"haddpg",
+        "env":	"pettingzoo_mpe",
+        "exp_name":	"report",
+        "load_config":	""
+    }
+}
