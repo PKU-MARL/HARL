@@ -12,7 +12,7 @@ HARL algorithms are our novel solutions to achieving effective multi-agent coope
   <img src="./assets/maad_sus_3_23.png" width="100%"/>
 </div>
 
-For more details, please refer to our paper.
+For more details, please refer to [our paper](http://arxiv.org/abs/2304.09870).
 
 
 
@@ -251,3 +251,19 @@ HAPPO consistently outperforms MAPPO, and is also better than the single-agent b
 <div align="center">
   <img src="./assets/dexhands_learning_curve.jpg" width="100%"/>
 </div>
+
+
+## Citation
+
+If you find our paper or this repository helpful in your research or project, please consider citing our work using the following BibTeX citation:
+
+```tex
+@misc{zhong2023heterogeneousagent,
+      title={Heterogeneous-Agent Reinforcement Learning}, 
+      author={Yifan Zhong and Jakub Grudzien Kuba and Siyi Hu and Jiaming Ji and Yaodong Yang},
+      year={2023},
+      eprint={2304.09870},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```
