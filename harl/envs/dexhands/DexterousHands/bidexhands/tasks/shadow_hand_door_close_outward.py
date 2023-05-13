@@ -388,7 +388,7 @@ class ShadowHandDoorCloseOutward(BaseTask):
 
         table_texture_files = os.path.join(
             os.getcwd(),
-            "../harl/env/dexhands/DexterousHands/assets/textures/texture_stone_stone_texture_0.jpg",
+            "../harl/envs/dexhands/DexterousHands/assets/textures/texture_stone_stone_texture_0.jpg",
         )
         table_texture_handle = self.gym.create_texture_from_file(
             self.sim, table_texture_files
