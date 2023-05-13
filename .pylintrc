@@ -48,15 +48,7 @@ ignore=CVS
 # ignore-list. The regex matches against paths and can be in Posix or Windows
 # format. Because '\' represents the directory delimiter on Windows systems, it
 # can't be used as an escape character.
-ignore-paths=harl_toolbox/env/,
-             harl_toolbox/algorithms/,
-             harl_toolbox/common/,
-             harl_toolbox/utils/,
-             harl_toolbox/models/,
-             harl_toolbox/configs/,
-             harl_toolbox/runner/on_policy_ha_runner.py,
-             harl_toolbox/runner/on_policy_ma_runner.py,
-             harl_toolbox/runner/off_policy_ha_runner.py
+ignore-paths=
 
 # Files or directories matching the regular expression patterns are skipped.
 # The regex matches against base names, not paths. The default value ignores
