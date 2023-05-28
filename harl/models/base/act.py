@@ -5,7 +5,9 @@ import torch.nn as nn
 class ACTLayer(nn.Module):
     """MLP Module to compute actions."""
 
-    def __init__(self, action_space, inputs_dim, initialization_method, gain, args=None):
+    def __init__(
+        self, action_space, inputs_dim, initialization_method, gain, args=None
+    ):
         """Initialize ACTLayer.
         Args:
             action_space: (gym.Space) action space.
@@ -18,7 +20,9 @@ class ACTLayer(nn.Module):
         self.action_type = action_space.__class__.__name__
         if action_space.__class__.__name__ == "Discrete":
             action_dim = action_space.n
-            self.action_out = Categorical(inputs_dim, action_dim, initialization_method, gain)
+            self.action_out = Categorical(
+                inputs_dim, action_dim, initialization_method, gain
+            )
         elif action_space.__class__.__name__ == "Box":
             action_dim = action_space.shape[0]
             self.action_out = DiagGaussian(
@@ -36,9 +40,13 @@ class ACTLayer(nn.Module):
             actions: (torch.Tensor) actions to take.
             action_log_probs: (torch.Tensor) log probabilities of taken actions.
         """
-        action_logits = self.action_out(x, available_actions)
-        actions = action_logits.mode() if deterministic else action_logits.sample()
-        action_log_probs = action_logits.log_probs(actions)
+        action_distribution = self.action_out(x, available_actions)
+        actions = (
+            action_distribution.mode()
+            if deterministic
+            else action_distribution.sample()
+        )
+        action_log_probs = action_distribution.log_probs(actions)
 
         return actions, action_log_probs
 
