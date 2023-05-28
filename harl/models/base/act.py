@@ -1,5 +1,5 @@
-from harl.models.base.distributions import Categorical, DiagGaussian
 import torch.nn as nn
+from harl.models.base.distributions import Categorical, DiagGaussian
 
 
 class ACTLayer(nn.Module):
