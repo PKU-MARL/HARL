@@ -42,14 +42,13 @@ def update_model(model, new_params):
         new_param = new_param.view(params.size())
         params.data.copy_(new_param)
         index += params_length
+        
 
-
-def kl_approx(q, p):
+def kl_approx(p, q):
     """KL divergence between two distributions."""
-    r = torch.exp(p - q)
-    kl = r - 1 - p + q
+    r = torch.exp(q - p)
+    kl = r - 1 - q + p
     return kl
-
 
 def _kl_normal_normal(p, q):
     """KL divergence between two normal distributions.
