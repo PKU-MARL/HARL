@@ -141,7 +141,11 @@ class HATRPO(OnPolicyBase):
                 active_masks_batch,
             )
 
-            ratio = torch.exp(action_log_probs - old_action_log_probs_batch)
+            ratio = getattr(torch, self.action_aggregation)(
+                torch.exp(action_log_probs - old_action_log_probs_batch),
+                dim=-1,
+                keepdim=True,
+            )
             if self.use_policy_active_masks:
                 new_loss = (
                     torch.sum(ratio * factor_batch * adv_targ, dim=-1, keepdim=True)
