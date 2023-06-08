@@ -1,4 +1,4 @@
-"""Tools for HARL-Toolbox."""
+"""Tools for HARL."""
 import copy
 import math
 import torch

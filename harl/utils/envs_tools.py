@@ -1,4 +1,4 @@
-"""Tools for HARL-Toolbox."""
+"""Tools for HARL."""
 import os
 import random
 import numpy as np
@@ -158,8 +158,10 @@ def make_render_env(env_name, seed, env_args):
         from harl.envs.smac.StarCraft2_Env import StarCraft2Env
 
         env = StarCraft2Env(args=env_args)
-        manual_render = False  # smac does not support manually calling the render() function
-                               # instead, it use save_replay()
+        manual_render = (
+            False  # smac does not support manually calling the render() function
+        )
+        # instead, it use save_replay()
         manual_delay = False
         env.seed(seed * 60000)
     elif env_name == "smacv2":
@@ -195,7 +197,9 @@ def make_render_env(env_name, seed, env_args):
 
         env = DexHandsEnv({"n_threads": 64, **env_args})
         manual_render = False  # dexhands renders automatically
-        manual_expand_dims = False  # dexhands uses parallel envs, thus dimension is already expanded
+        manual_expand_dims = (
+            False  # dexhands uses parallel envs, thus dimension is already expanded
+        )
         manual_delay = False
         env_num = 64
     else:

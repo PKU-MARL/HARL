@@ -1,4 +1,4 @@
-"""Tools for loading and updating configs.""" ""
+"""Tools for loading and updating configs."""
 import time
 import os
 import json
@@ -44,6 +44,7 @@ def update_args(unparsed_dict, *args):
     for args_dict in args:
         update_dict(unparsed_dict, args_dict)
 
+
 def get_task_name(env, env_args):
     """Get task name."""
     if env == "smac":
@@ -53,7 +54,7 @@ def get_task_name(env, env_args):
     elif env == "mamujoco":
         task = f"{env_args['scenario']}-{env_args['agent_conf']}"
     elif env == "pettingzoo_mpe":
-        if env_args['continuous_actions']:
+        if env_args["continuous_actions"]:
             task = f"{env_args['scenario']}-continuous"
         else:
             task = f"{env_args['scenario']}-discrete"
@@ -69,15 +70,21 @@ def get_task_name(env, env_args):
 def init_dir(env, env_args, algo, exp_name, seed, logger_path):
     """Init directory for saving results."""
     task = get_task_name(env, env_args)
-    hms_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
+    hms_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
     results_path = os.path.join(
-        logger_path, env, task, algo, exp_name, '-'.join(['seed-{:0>5}'.format(seed), hms_time])
+        logger_path,
+        env,
+        task,
+        algo,
+        exp_name,
+        "-".join(["seed-{:0>5}".format(seed), hms_time]),
     )
-    log_path = os.path.join(results_path, 'logs')
+    log_path = os.path.join(results_path, "logs")
     os.makedirs(log_path, exist_ok=True)
     from tensorboardX import SummaryWriter
+
     writter = SummaryWriter(log_path)
-    models_path = os.path.join(results_path, 'models')
+    models_path = os.path.join(results_path, "models")
     os.makedirs(models_path, exist_ok=True)
     return results_path, log_path, models_path, writter
 
@@ -105,11 +112,13 @@ def convert_json(obj):
         elif isinstance(obj, list):
             return [convert_json(x) for x in obj]
 
-        elif hasattr(obj, '__name__') and not ('lambda' in obj.__name__):
+        elif hasattr(obj, "__name__") and not ("lambda" in obj.__name__):
             return convert_json(obj.__name__)
 
-        elif hasattr(obj, '__dict__') and obj.__dict__:
-            obj_dict = {convert_json(k): convert_json(v) for k, v in obj.__dict__.items()}
+        elif hasattr(obj, "__dict__") and obj.__dict__:
+            obj_dict = {
+                convert_json(k): convert_json(v) for k, v in obj.__dict__.items()
+            }
             return {str(obj): obj_dict}
 
         return str(obj)
@@ -119,6 +128,6 @@ def save_config(args, algo_args, env_args, run_dir):
     """Save the configuration of the program."""
     config = {"main_args": args, "algo_args": algo_args, "env_args": env_args}
     config_json = convert_json(config)
-    output = json.dumps(config_json, separators=(',', ':\t'), indent=4, sort_keys=True)
-    with open(os.path.join(run_dir, "config.json"), 'w', encoding='utf-8') as out:
+    output = json.dumps(config_json, separators=(",", ":\t"), indent=4, sort_keys=True)
+    with open(os.path.join(run_dir, "config.json"), "w", encoding="utf-8") as out:
         out.write(output)
