@@ -82,16 +82,14 @@ class VCritic:
         Returns:
             value_loss: (torch.Tensor) value function loss.
         """
+        value_pred_clipped = value_preds_batch + (values - value_preds_batch).clamp(
+            -self.clip_param, self.clip_param
+        )
         if value_normalizer is not None:
-            value_pred_clipped = value_preds_batch + (values - value_preds_batch).clamp(
-                -self.clip_param, self.clip_param
-            )
-            error_clipped = value_normalizer(return_batch) - value_pred_clipped
-            error_original = value_normalizer(return_batch) - values
+            value_normalizer.update(return_batch)
+            error_clipped = value_normalizer.normalize(return_batch) - value_pred_clipped
+            error_original = value_normalizer.normalize(return_batch) - values
         else:
-            value_pred_clipped = value_preds_batch + (values - value_preds_batch).clamp(
-                -self.clip_param, self.clip_param
-            )
             error_clipped = return_batch - value_pred_clipped
             error_original = return_batch - values
 

@@ -33,12 +33,6 @@ class PopArt(nn.Module):
         )
         self.debiasing_term = nn.Parameter(torch.tensor(0.0), requires_grad=False).to(**self.tpdv)
 
-    def reset_parameters(self):
-        """Reset parameters."""
-        self.running_mean.zero_()
-        self.running_mean_sq.zero_()
-        self.debiasing_term.zero_()
-
     def running_mean_var(self):
         """Get running mean and variance."""
         debiased_mean = self.running_mean / self.debiasing_term.clamp(min=self.epsilon)
@@ -46,34 +40,33 @@ class PopArt(nn.Module):
         debiased_var = (debiased_mean_sq - debiased_mean**2).clamp(min=1e-2)
         return debiased_mean, debiased_var
 
-    def forward(self, input_vector, train=True):
-        """Forward."""
+    @torch.no_grad()
+    def update(self, input_vector):
         if isinstance(input_vector, np.ndarray):
             input_vector = torch.from_numpy(input_vector)
         input_vector = input_vector.to(**self.tpdv)
 
-        if train:
-            # Detach input before adding it to running means to avoid backpropping through it on
-            # subsequent batches.
-            detached_input = input_vector.detach()
-            batch_mean = detached_input.mean(dim=tuple(range(self.norm_axes)))
-            batch_sq_mean = (detached_input**2).mean(dim=tuple(range(self.norm_axes)))
+        batch_mean = input_vector.mean(dim=tuple(range(self.norm_axes)))
+        batch_sq_mean = (input_vector ** 2).mean(dim=tuple(range(self.norm_axes)))
 
-            if self.per_element_update:
-                batch_size = np.prod(detached_input.size()[: self.norm_axes])
-                weight = self.beta**batch_size
-            else:
-                weight = self.beta
+        if self.per_element_update:
+            batch_size = np.prod(input_vector.size()[:self.norm_axes])
+            weight = self.beta ** batch_size
+        else:
+            weight = self.beta
 
-            self.running_mean.mul_(weight).add_(batch_mean * (1.0 - weight))
-            self.running_mean_sq.mul_(weight).add_(batch_sq_mean * (1.0 - weight))
-            self.debiasing_term.mul_(weight).add_(1.0 * (1.0 - weight))
+        self.running_mean.mul_(weight).add_(batch_mean * (1.0 - weight))
+        self.running_mean_sq.mul_(weight).add_(batch_sq_mean * (1.0 - weight))
+        self.debiasing_term.mul_(weight).add_(1.0 * (1.0 - weight))
+
+    def normalize(self, input_vector):
+        if isinstance(input_vector, np.ndarray):
+            input_vector = torch.from_numpy(input_vector)
+        input_vector = input_vector.to(**self.tpdv)
 
         mean, var = self.running_mean_var()
-        out = (input_vector - mean[(None,) * self.norm_axes]) / torch.sqrt(var)[
-            (None,) * self.norm_axes
-        ]
-
+        out = (input_vector - mean[(None,) * self.norm_axes]) / torch.sqrt(var)[(None,) * self.norm_axes]
+        
         return out
 
     def denormalize(self, input_vector):
