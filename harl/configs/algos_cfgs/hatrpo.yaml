@@ -22,8 +22,8 @@ train:
   log_interval: 5
   # evaluation interval
   eval_interval: 25
-  # whether to use PopArt
-  use_popart: True
+  # whether to use ValueNorm
+  use_valuenorm: True
   # whether to use linear learning rate decay
   use_linear_lr_decay: False
   # whether to consider the case of truncation when an episode is done

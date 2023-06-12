@@ -72,13 +72,15 @@ class VCritic:
         values, rnn_states_critic = self.critic(cent_obs, rnn_states_critic, masks)
         return values, rnn_states_critic
 
-    def cal_value_loss(self, values, value_preds_batch, return_batch, value_normalizer=None):
+    def cal_value_loss(
+        self, values, value_preds_batch, return_batch, value_normalizer=None
+    ):
         """Calculate value function loss.
         Args:
             values: (torch.Tensor) value function predictions.
             value_preds_batch: (torch.Tensor) "old" value  predictions from data batch (used for value clip loss)
             return_batch: (torch.Tensor) reward to go returns.
-            value_normalizer: (PopArt) normalize the rewards, denormalize critic outputs.
+            value_normalizer: (ValueNorm) normalize the rewards, denormalize critic outputs.
         Returns:
             value_loss: (torch.Tensor) value function loss.
         """
@@ -87,7 +89,9 @@ class VCritic:
         )
         if value_normalizer is not None:
             value_normalizer.update(return_batch)
-            error_clipped = value_normalizer.normalize(return_batch) - value_pred_clipped
+            error_clipped = (
+                value_normalizer.normalize(return_batch) - value_pred_clipped
+            )
             error_original = value_normalizer.normalize(return_batch) - values
         else:
             error_clipped = return_batch - value_pred_clipped
@@ -113,7 +117,7 @@ class VCritic:
         """Update critic network.
         Args:
             sample: (Tuple) contains data batch with which to update networks.
-            value_normalizer: (PopArt) normalize the rewards, denormalize critic outputs.
+            value_normalizer: (ValueNorm) normalize the rewards, denormalize critic outputs.
         Returns:
             value_loss: (torch.Tensor) value function loss.
             critic_grad_norm: (torch.Tensor) gradient norm from critic update.
@@ -129,7 +133,9 @@ class VCritic:
         value_preds_batch = check(value_preds_batch).to(**self.tpdv)
         return_batch = check(return_batch).to(**self.tpdv)
 
-        values, _ = self.get_values(share_obs_batch, rnn_states_critic_batch, masks_batch)
+        values, _ = self.get_values(
+            share_obs_batch, rnn_states_critic_batch, masks_batch
+        )
 
         value_loss = self.cal_value_loss(
             values, value_preds_batch, return_batch, value_normalizer=value_normalizer
@@ -154,7 +160,7 @@ class VCritic:
         """Perform a training update using minibatch GD.
         Args:
             critic_buffer: (OnPolicyCriticBufferEP or OnPolicyCriticBufferFP) buffer containing training data related to critic.
-            value_normalizer: (PopArt) normalize the rewards, denormalize critic outputs.
+            value_normalizer: (ValueNorm) normalize the rewards, denormalize critic outputs.
         Returns:
             train_info: (dict) contains information regarding training update (e.g. loss, grad norms, etc).
         """

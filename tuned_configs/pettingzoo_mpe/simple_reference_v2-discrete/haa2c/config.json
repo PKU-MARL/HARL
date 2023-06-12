@@ -1,87 +1,87 @@
 {
-    "algo_args":	{
-        "algo":	{
-            "a2c_epoch":	5,
-            "action_aggregation":	"prod",
-            "actor_num_mini_batch":	1,
-            "clip_param":	0.2,
-            "critic_epoch":	5,
-            "critic_num_mini_batch":	1,
-            "entropy_coef":	0.01,
-            "fixed_order":	false,
-            "gae_lambda":	0.95,
-            "gamma":	0.99,
-            "huber_delta":	10.0,
-            "max_grad_norm":	10.0,
-            "share_param":	false,
-            "use_clipped_value_loss":	true,
-            "use_gae":	true,
-            "use_huber_loss":	true,
-            "use_max_grad_norm":	true,
-            "use_policy_active_masks":	true,
-            "value_loss_coef":	1
+    "algo_args": {
+        "algo": {
+            "a2c_epoch": 5,
+            "action_aggregation": "prod",
+            "actor_num_mini_batch": 1,
+            "clip_param": 0.2,
+            "critic_epoch": 5,
+            "critic_num_mini_batch": 1,
+            "entropy_coef": 0.01,
+            "fixed_order": false,
+            "gae_lambda": 0.95,
+            "gamma": 0.99,
+            "huber_delta": 10.0,
+            "max_grad_norm": 10.0,
+            "share_param": false,
+            "use_clipped_value_loss": true,
+            "use_gae": true,
+            "use_huber_loss": true,
+            "use_max_grad_norm": true,
+            "use_policy_active_masks": true,
+            "value_loss_coef": 1
         },
-        "device":	{
-            "cuda":	true,
-            "cuda_deterministic":	true,
-            "torch_threads":	4
+        "device": {
+            "cuda": true,
+            "cuda_deterministic": true,
+            "torch_threads": 4
         },
-        "eval":	{
-            "eval_episodes":	20,
-            "n_eval_rollout_threads":	10,
-            "use_eval":	true
+        "eval": {
+            "eval_episodes": 20,
+            "n_eval_rollout_threads": 10,
+            "use_eval": true
         },
-        "logger":	{
-            "log_dir":	"./results"
+        "logger": {
+            "log_dir": "./results"
         },
-        "model":	{
-            "activation_func":	"relu",
-            "critic_lr":	0.0005,
-            "data_chunk_length":	10,
-            "gain":	0.01,
-            "hidden_sizes":	[
+        "model": {
+            "activation_func": "relu",
+            "critic_lr": 0.0005,
+            "data_chunk_length": 10,
+            "gain": 0.01,
+            "hidden_sizes": [
                 128,
                 128
             ],
-            "initialization_method":	"orthogonal_",
-            "lr":	0.0005,
-            "opti_eps":	1e-05,
-            "recurrent_n":	1,
-            "std_x_coef":	1,
-            "std_y_coef":	0.5,
-            "use_feature_normalization":	true,
-            "use_naive_recurrent_policy":	false,
-            "use_recurrent_policy":	false,
-            "weight_decay":	0
+            "initialization_method": "orthogonal_",
+            "lr": 0.0005,
+            "opti_eps": 1e-05,
+            "recurrent_n": 1,
+            "std_x_coef": 1,
+            "std_y_coef": 0.5,
+            "use_feature_normalization": true,
+            "use_naive_recurrent_policy": false,
+            "use_recurrent_policy": false,
+            "weight_decay": 0
         },
-        "render":	{
-            "render_episodes":	10,
-            "use_render":	false
+        "render": {
+            "render_episodes": 10,
+            "use_render": false
         },
-        "seed":	{
-            "seed":	1,
-            "seed_specify":	true
+        "seed": {
+            "seed": 1,
+            "seed_specify": true
         },
-        "train":	{
-            "episode_length":	200,
-            "eval_interval":	25,
-            "log_interval":	5,
-            "model_dir":	null,
-            "n_rollout_threads":	20,
-            "num_env_steps":	10000000,
-            "use_linear_lr_decay":	false,
-            "use_popart":	true,
-            "use_proper_time_limits":	true
+        "train": {
+            "episode_length": 200,
+            "eval_interval": 25,
+            "log_interval": 5,
+            "model_dir": null,
+            "n_rollout_threads": 20,
+            "num_env_steps": 10000000,
+            "use_linear_lr_decay": false,
+            "use_valuenorm": true,
+            "use_proper_time_limits": true
         }
     },
-    "env_args":	{
-        "continuous_actions":	false,
-        "scenario":	"simple_reference_v2"
+    "env_args": {
+        "continuous_actions": false,
+        "scenario": "simple_reference_v2"
     },
-    "main_args":	{
-        "algo":	"haa2c",
-        "env":	"pettingzoo_mpe",
-        "exp_name":	"report",
-        "load_config":	""
+    "main_args": {
+        "algo": "haa2c",
+        "env": "pettingzoo_mpe",
+        "exp_name": "report",
+        "load_config": ""
     }
 }

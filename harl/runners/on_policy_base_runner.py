@@ -4,7 +4,7 @@ import time
 import numpy as np
 import torch
 import setproctitle
-from harl.common.popart import PopArt
+from harl.common.valuenorm import ValueNorm
 from harl.common.buffers.on_policy_actor_buffer import OnPolicyActorBuffer
 from harl.common.buffers.on_policy_critic_buffer_ep import OnPolicyCriticBufferEP
 from harl.common.buffers.on_policy_critic_buffer_fp import OnPolicyCriticBufferFP
@@ -21,6 +21,7 @@ from harl.utils.envs_tools import (
 from harl.utils.models_tools import init_device
 from harl.utils.configs_tools import init_dir, save_config
 from harl.envs import LOGGER_REGISTRY
+
 
 class OnPolicyBaseRunner:
     """Base runner for on-policy algorithms."""
@@ -41,11 +42,11 @@ class OnPolicyBaseRunner:
         self.recurrent_n = algo_args["model"]["recurrent_n"]
         self.action_aggregation = algo_args["algo"]["action_aggregation"]
         self.state_type = env_args.get("state_type", "EP")
-        self.share_param = algo_args["algo"]['share_param']
-        self.fixed_order = algo_args["algo"]['fixed_order']
+        self.share_param = algo_args["algo"]["share_param"]
+        self.fixed_order = algo_args["algo"]["fixed_order"]
         set_seed(algo_args["seed"])
         self.device = init_device(algo_args["device"])
-        if not self.algo_args['render']['use_render']:  # train, not render
+        if not self.algo_args["render"]["use_render"]:  # train, not render
             self.run_dir, self.log_dir, self.save_dir, self.writter = init_dir(
                 args["env"],
                 env_args,
@@ -61,7 +62,7 @@ class OnPolicyBaseRunner:
         )
 
         # set the config of env
-        if self.algo_args['render']['use_render']:  # make envs for rendering
+        if self.algo_args["render"]["use_render"]:  # make envs for rendering
             (
                 self.envs,
                 self.manual_render,
@@ -104,7 +105,8 @@ class OnPolicyBaseRunner:
             self.actor.append(agent)
             for agent_id in range(1, self.num_agents):
                 assert (
-                    self.envs.observation_space[agent_id] == self.envs.observation_space[0]
+                    self.envs.observation_space[agent_id]
+                    == self.envs.observation_space[0]
                 ), "Agents have heterogeneous observation spaces, parameter sharing is not valid."
                 assert (
                     self.envs.action_space[agent_id] == self.envs.action_space[0]
@@ -121,7 +123,7 @@ class OnPolicyBaseRunner:
                 )
                 self.actor.append(agent)
 
-        if self.algo_args['render']['use_render'] is False:  # train, not render
+        if self.algo_args["render"]["use_render"] is False:  # train, not render
             self.actor_buffer = []
             for agent_id in range(self.num_agents):
                 ac_bu = OnPolicyActorBuffer(
@@ -155,35 +157,37 @@ class OnPolicyBaseRunner:
             else:
                 raise NotImplementedError
 
-            if self.algo_args['train']['use_popart'] is True:
-                self.value_normalizer = PopArt(1, device=self.device)
+            if self.algo_args["train"]["use_valuenorm"] is True:
+                self.value_normalizer = ValueNorm(1, device=self.device)
             else:
                 self.value_normalizer = None
 
             self.logger = LOGGER_REGISTRY[args["env"]](
                 args, algo_args, env_args, self.num_agents, self.writter, self.run_dir
             )
-        if self.algo_args['train']['model_dir'] is not None:  # restore model
+        if self.algo_args["train"]["model_dir"] is not None:  # restore model
             self.restore()
-    
+
     def run(self):
         """Run the training (or rendering) pipeline."""
-        if self.algo_args['render']['use_render'] is True:
+        if self.algo_args["render"]["use_render"] is True:
             self.render()
             return
         print("start running")
         self.warmup()
 
         episodes = (
-            int(self.algo_args['train']['num_env_steps'])
-            // self.algo_args['train']['episode_length']
-            // self.algo_args['train']['n_rollout_threads']
+            int(self.algo_args["train"]["num_env_steps"])
+            // self.algo_args["train"]["episode_length"]
+            // self.algo_args["train"]["n_rollout_threads"]
         )
 
         self.logger.init(episodes)  # logger callback at the beginning of training
 
         for episode in range(1, episodes + 1):
-            if self.algo_args['train']['use_linear_lr_decay']:  # linear decay of learning rate
+            if self.algo_args["train"][
+                "use_linear_lr_decay"
+            ]:  # linear decay of learning rate
                 if self.share_param:
                     self.actor[0].lr_decay(episode, episodes)
                 else:
@@ -191,10 +195,12 @@ class OnPolicyBaseRunner:
                         self.actor[agent_id].lr_decay(episode, episodes)
                 self.critic.lr_decay(episode, episodes)
 
-            self.logger.episode_init(episode)  # logger callback at the beginning of each episode
+            self.logger.episode_init(
+                episode
+            )  # logger callback at the beginning of each episode
 
             self.prep_rollout()  # change to eval mode
-            for step in range(self.algo_args['train']['episode_length']):
+            for step in range(self.algo_args["train"]["episode_length"]):
                 # Sample actions from actors and values from critics
                 (
                     values,
@@ -243,7 +249,7 @@ class OnPolicyBaseRunner:
             actor_train_infos, critic_train_info = self.train()
 
             # log information
-            if episode % self.algo_args['train']['log_interval'] == 0:
+            if episode % self.algo_args["train"]["log_interval"] == 0:
                 self.logger.episode_log(
                     actor_train_infos,
                     critic_train_info,
@@ -252,8 +258,8 @@ class OnPolicyBaseRunner:
                 )
 
             # eval
-            if episode % self.algo_args['train']['eval_interval'] == 0:
-                if self.algo_args['eval']['use_eval']:
+            if episode % self.algo_args["train"]["eval_interval"] == 0:
+                if self.algo_args["eval"]["use_eval"]:
                     self.prep_rollout()
                     self.eval()
                 self.save()
@@ -322,13 +328,17 @@ class OnPolicyBaseRunner:
                 np.concatenate(self.critic_buffer.masks[step]),
             )  # concatenate (n_threads, n_agents, dim) into (n_threads * n_agents, dim)
             # split (n_threads * n_agents, dim) into (n_threads, n_agents, dim)
-            values = np.array(np.split(_t2n(value), self.algo_args['train']['n_rollout_threads']))
+            values = np.array(
+                np.split(_t2n(value), self.algo_args["train"]["n_rollout_threads"])
+            )
             rnn_states_critic = np.array(
-                np.split(_t2n(rnn_state_critic), self.algo_args['train']['n_rollout_threads'])
+                np.split(
+                    _t2n(rnn_state_critic), self.algo_args["train"]["n_rollout_threads"]
+                )
             )
 
         return values, actions, action_log_probs, rnn_states, rnn_states_critic
-    
+
     def insert(self, data):
         """Insert data into buffer."""
         (
@@ -346,7 +356,9 @@ class OnPolicyBaseRunner:
         ) = data
 
         dones_env = np.all(dones, axis=1)  # if all agents are done, then env is done
-        rnn_states[dones_env == True] = np.zeros(  # if env is done, then reset rnn_state to all zero
+        rnn_states[
+            dones_env == True
+        ] = np.zeros(  # if env is done, then reset rnn_state to all zero
             (
                 (dones_env == True).sum(),
                 self.num_agents,
@@ -376,7 +388,8 @@ class OnPolicyBaseRunner:
         # masks use 0 to mask out threads that just finish.
         # this is used for denoting at which point should rnn state be reset
         masks = np.ones(
-            (self.algo_args['train']['n_rollout_threads'], self.num_agents, 1), dtype=np.float32
+            (self.algo_args["train"]["n_rollout_threads"], self.num_agents, 1),
+            dtype=np.float32,
         )
         masks[dones_env == True] = np.zeros(
             ((dones_env == True).sum(), self.num_agents, 1), dtype=np.float32
@@ -384,9 +397,12 @@ class OnPolicyBaseRunner:
 
         # active_masks use 0 to mask out agents that have died
         active_masks = np.ones(
-            (self.algo_args['train']['n_rollout_threads'], self.num_agents, 1), dtype=np.float32
+            (self.algo_args["train"]["n_rollout_threads"], self.num_agents, 1),
+            dtype=np.float32,
         )
-        active_masks[dones == True] = np.zeros(((dones == True).sum(), 1), dtype=np.float32)
+        active_masks[dones == True] = np.zeros(
+            ((dones == True).sum(), 1), dtype=np.float32
+        )
         active_masks[dones_env == True] = np.ones(
             ((dones_env == True).sum(), self.num_agents, 1), dtype=np.float32
         )
@@ -396,7 +412,8 @@ class OnPolicyBaseRunner:
             bad_masks = np.array(
                 [
                     [0.0]
-                    if "bad_transition" in info[0].keys() and info[0]["bad_transition"] == True
+                    if "bad_transition" in info[0].keys()
+                    and info[0]["bad_transition"] == True
                     else [1.0]
                     for info in infos
                 ]
@@ -423,7 +440,9 @@ class OnPolicyBaseRunner:
                 action_log_probs[:, agent_id],
                 masks[:, agent_id],
                 active_masks[:, agent_id],
-                available_actions[:, agent_id] if available_actions[0] is not None else None,
+                available_actions[:, agent_id]
+                if available_actions[0] is not None
+                else None,
             )
 
         if self.state_type == "EP":
@@ -443,7 +462,7 @@ class OnPolicyBaseRunner:
     @torch.no_grad()
     def compute(self):
         """Compute returns and advantages.
-        Compute critic evaluation of the last state, 
+        Compute critic evaluation of the last state,
         and then let buffer compute returns, which will be used during training.
         """
         if self.state_type == "EP":
@@ -460,14 +479,14 @@ class OnPolicyBaseRunner:
                 np.concatenate(self.critic_buffer.masks[-1]),
             )
             next_value = np.array(
-                np.split(_t2n(next_value), self.algo_args['train']['n_rollout_threads'])
+                np.split(_t2n(next_value), self.algo_args["train"]["n_rollout_threads"])
             )
         self.critic_buffer.compute_returns(next_value, self.value_normalizer)
 
     def train(self):
         """Train the model."""
         raise NotImplementedError
-    
+
     def after_update(self):
         """Do the necessary data operations after an update.
         After an update, copy the data at the last step to the first position of the buffer.
@@ -487,7 +506,7 @@ class OnPolicyBaseRunner:
 
         eval_rnn_states = np.zeros(
             (
-                self.algo_args['eval']['n_eval_rollout_threads'],
+                self.algo_args["eval"]["n_eval_rollout_threads"],
                 self.num_agents,
                 self.recurrent_n,
                 self.rnn_hidden_size,
@@ -495,7 +514,8 @@ class OnPolicyBaseRunner:
             dtype=np.float32,
         )
         eval_masks = np.ones(
-            (self.algo_args['eval']['n_eval_rollout_threads'], self.num_agents, 1), dtype=np.float32
+            (self.algo_args["eval"]["n_eval_rollout_threads"], self.num_agents, 1),
+            dtype=np.float32,
         )
 
         while True:
@@ -531,11 +551,15 @@ class OnPolicyBaseRunner:
                 eval_infos,
                 eval_available_actions,
             )
-            self.logger.eval_per_step(eval_data)  # logger callback at each step of evaluation
+            self.logger.eval_per_step(
+                eval_data
+            )  # logger callback at each step of evaluation
 
             eval_dones_env = np.all(eval_dones, axis=1)
 
-            eval_rnn_states[eval_dones_env == True] = np.zeros(  # if env is done, then reset rnn_state to all zero
+            eval_rnn_states[
+                eval_dones_env == True
+            ] = np.zeros(  # if env is done, then reset rnn_state to all zero
                 (
                     (eval_dones_env == True).sum(),
                     self.num_agents,
@@ -553,13 +577,17 @@ class OnPolicyBaseRunner:
                 ((eval_dones_env == True).sum(), self.num_agents, 1), dtype=np.float32
             )
 
-            for eval_i in range(self.algo_args['eval']['n_eval_rollout_threads']):
+            for eval_i in range(self.algo_args["eval"]["n_eval_rollout_threads"]):
                 if eval_dones_env[eval_i]:
                     eval_episode += 1
-                    self.logger.eval_thread_done(eval_i)  # logger callback when an episode is done
+                    self.logger.eval_thread_done(
+                        eval_i
+                    )  # logger callback when an episode is done
 
             if eval_episode >= self.algo_args["eval"]["eval_episodes"]:
-                self.logger.eval_log(eval_episode)  # logger callback at the end of evaluation
+                self.logger.eval_log(
+                    eval_episode
+                )  # logger callback at the end of evaluation
                 break
 
     @torch.no_grad()
@@ -568,7 +596,7 @@ class OnPolicyBaseRunner:
         print("start rendering")
         if self.manual_expand_dims:
             # this env needs manual expansion of the num_of_parallel_envs dimension
-            for _ in range(self.algo_args['render']['render_episodes']):
+            for _ in range(self.algo_args["render"]["render_episodes"]):
                 eval_obs, _, eval_available_actions = self.envs.reset()
                 eval_obs = np.expand_dims(np.array(eval_obs), axis=0)
                 eval_available_actions = (
@@ -585,7 +613,9 @@ class OnPolicyBaseRunner:
                     ),
                     dtype=np.float32,
                 )
-                eval_masks = np.ones((self.env_num, self.num_agents, 1), dtype=np.float32)
+                eval_masks = np.ones(
+                    (self.env_num, self.num_agents, 1), dtype=np.float32
+                )
                 rewards = 0
                 while True:
                     eval_actions_collector = []
@@ -627,7 +657,7 @@ class OnPolicyBaseRunner:
         else:
             # this env does not need manual expansion of the num_of_parallel_envs dimension
             # such as dexhands, which instantiates a parallel env of 64 pair of hands
-            for _ in range(self.algo_args['render']['render_episodes']):
+            for _ in range(self.algo_args["render"]["render_episodes"]):
                 eval_obs, _, eval_available_actions = self.envs.reset()
                 eval_rnn_states = np.zeros(
                     (
@@ -638,7 +668,9 @@ class OnPolicyBaseRunner:
                     ),
                     dtype=np.float32,
                 )
-                eval_masks = np.ones((self.env_num, self.num_agents, 1), dtype=np.float32)
+                eval_masks = np.ones(
+                    (self.env_num, self.num_agents, 1), dtype=np.float32
+                )
                 rewards = 0
                 while True:
                     eval_actions_collector = []
@@ -698,7 +730,9 @@ class OnPolicyBaseRunner:
                 str(self.save_dir) + "/actor_agent" + str(agent_id) + ".pt",
             )
         policy_critic = self.critic.critic
-        torch.save(policy_critic.state_dict(), str(self.save_dir) + "/critic_agent" + ".pt")
+        torch.save(
+            policy_critic.state_dict(), str(self.save_dir) + "/critic_agent" + ".pt"
+        )
         if self.value_normalizer is not None:
             torch.save(
                 self.value_normalizer.state_dict(),
@@ -709,23 +743,28 @@ class OnPolicyBaseRunner:
         """Restore model parameters."""
         for agent_id in range(self.num_agents):
             policy_actor_state_dict = torch.load(
-                str(self.algo_args['train']['model_dir']) + "/actor_agent" + str(agent_id) + ".pt"
+                str(self.algo_args["train"]["model_dir"])
+                + "/actor_agent"
+                + str(agent_id)
+                + ".pt"
             )
             self.actor[agent_id].actor.load_state_dict(policy_actor_state_dict)
-        if not self.algo_args['render']['use_render']:
+        if not self.algo_args["render"]["use_render"]:
             policy_critic_state_dict = torch.load(
-                str(self.algo_args['train']['model_dir']) + "/critic_agent" + ".pt"
+                str(self.algo_args["train"]["model_dir"]) + "/critic_agent" + ".pt"
             )
             self.critic.critic.load_state_dict(policy_critic_state_dict)
             if self.value_normalizer is not None:
                 value_normalizer_state_dict = torch.load(
-                    str(self.algo_args['train']['model_dir']) + "/value_normalizer" + ".pt"
+                    str(self.algo_args["train"]["model_dir"])
+                    + "/value_normalizer"
+                    + ".pt"
                 )
                 self.value_normalizer.load_state_dict(value_normalizer_state_dict)
 
     def close(self):
         """Close environment, writter, and logger."""
-        if self.algo_args['render']['use_render']:
+        if self.algo_args["render"]["use_render"]:
             self.envs.close()
         else:
             self.envs.close()

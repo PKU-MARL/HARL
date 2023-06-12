@@ -81,7 +81,9 @@ class OnPolicyCriticBufferFP:
 
         self.step = 0
 
-    def insert(self, share_obs, rnn_states_critic, value_preds, rewards, masks, bad_masks):
+    def insert(
+        self, share_obs, rnn_states_critic, value_preds, rewards, masks, bad_masks
+    ):
         """Insert data into buffer."""
         self.share_obs[self.step + 1] = share_obs.copy()
         self.rnn_states_critic[self.step + 1] = rnn_states_critic.copy()
@@ -106,14 +108,16 @@ class OnPolicyCriticBufferFP:
         """Compute returns either as discounted sum of rewards, or using GAE.
         Args:
             next_value: (np.ndarray) value predictions for the step after the last episode step.
-            value_normalizer: (PopArt) If not None, PopArt value normalizer instance.
+            value_normalizer: (ValueNorm) If not None, ValueNorm value normalizer instance.
         """
-        if self.use_proper_time_limits:  # consider the difference between truncation and termination
+        if (
+            self.use_proper_time_limits
+        ):  # consider the difference between truncation and termination
             if self.use_gae:  # use GAE
                 self.value_preds[-1] = next_value
                 gae = 0
                 for step in reversed(range(self.rewards.shape[0])):
-                    if value_normalizer is not None:  # use PopArt
+                    if value_normalizer is not None:  # use ValueNorm
                         delta = (
                             self.rewards[step]
                             + self.gamma
@@ -121,24 +125,32 @@ class OnPolicyCriticBufferFP:
                             * self.masks[step + 1]
                             - value_normalizer.denormalize(self.value_preds[step])
                         )
-                        gae = delta + self.gamma * self.gae_lambda * gae * self.masks[step + 1]
+                        gae = (
+                            delta
+                            + self.gamma * self.gae_lambda * gae * self.masks[step + 1]
+                        )
                         gae = gae * self.bad_masks[step + 1]
                         self.returns[step] = gae + value_normalizer.denormalize(
                             self.value_preds[step]
                         )
-                    else:  # do not use PopArt
+                    else:  # do not use ValueNorm
                         delta = (
                             self.rewards[step]
-                            + self.gamma * self.value_preds[step + 1] * self.masks[step + 1]
+                            + self.gamma
+                            * self.value_preds[step + 1]
+                            * self.masks[step + 1]
                             - self.value_preds[step]
                         )
-                        gae = delta + self.gamma * self.gae_lambda * self.masks[step + 1] * gae
+                        gae = (
+                            delta
+                            + self.gamma * self.gae_lambda * self.masks[step + 1] * gae
+                        )
                         gae = gae * self.bad_masks[step + 1]
                         self.returns[step] = gae + self.value_preds[step]
             else:  # do not use GAE
                 self.returns[-1] = next_value
                 for step in reversed(range(self.rewards.shape[0])):
-                    if value_normalizer is not None:  # use PopArt
+                    if value_normalizer is not None:  # use ValueNorm
                         self.returns[step] = (
                             self.returns[step + 1] * self.gamma * self.masks[step + 1]
                             + self.rewards[step]
@@ -147,7 +159,7 @@ class OnPolicyCriticBufferFP:
                         ) * value_normalizer.denormalize(
                             self.value_preds[step]
                         )
-                    else:  # do not use PopArt
+                    else:  # do not use ValueNorm
                         self.returns[step] = (
                             self.returns[step + 1] * self.gamma * self.masks[step + 1]
                             + self.rewards[step]
@@ -161,7 +173,7 @@ class OnPolicyCriticBufferFP:
                 self.value_preds[-1] = next_value
                 gae = 0
                 for step in reversed(range(self.rewards.shape[0])):
-                    if value_normalizer is not None:  # use PopArt
+                    if value_normalizer is not None:  # use ValueNorm
                         delta = (
                             self.rewards[step]
                             + self.gamma
@@ -169,17 +181,25 @@ class OnPolicyCriticBufferFP:
                             * self.masks[step + 1]
                             - value_normalizer.denormalize(self.value_preds[step])
                         )
-                        gae = delta + self.gamma * self.gae_lambda * self.masks[step + 1] * gae
+                        gae = (
+                            delta
+                            + self.gamma * self.gae_lambda * self.masks[step + 1] * gae
+                        )
                         self.returns[step] = gae + value_normalizer.denormalize(
                             self.value_preds[step]
                         )
-                    else:  # do not use PopArt
+                    else:  # do not use ValueNorm
                         delta = (
                             self.rewards[step]
-                            + self.gamma * self.value_preds[step + 1] * self.masks[step + 1]
+                            + self.gamma
+                            * self.value_preds[step + 1]
+                            * self.masks[step + 1]
                             - self.value_preds[step]
                         )
-                        gae = delta + self.gamma * self.gae_lambda * self.masks[step + 1] * gae
+                        gae = (
+                            delta
+                            + self.gamma * self.gae_lambda * self.masks[step + 1] * gae
+                        )
                         self.returns[step] = gae + self.value_preds[step]
             else:  # do not use GAE
                 self.returns[-1] = next_value
@@ -189,7 +209,9 @@ class OnPolicyCriticBufferFP:
                         + self.rewards[step]
                     )
 
-    def feed_forward_generator_critic(self, critic_num_mini_batch=None, mini_batch_size=None):
+    def feed_forward_generator_critic(
+        self, critic_num_mini_batch=None, mini_batch_size=None
+    ):
         """Training data generator for critic that uses MLP network.
         Args:
             critic_num_mini_batch: (int) Number of mini batches for critic.
@@ -215,7 +237,7 @@ class OnPolicyCriticBufferFP:
         ]
 
         # Combine the first three dimensions (episode_length, n_rollout_threads, num_agents) to form batch.
-        # Take share_obs shape as an example: 
+        # Take share_obs shape as an example:
         # (episode_length + 1, n_rollout_threads, num_agents, *share_obs_shape) --> (episode_length, n_rollout_threads, num_agents, *share_obs_shape)
         # --> (episode_length * n_rollout_threads * num_agents, *share_obs_shape)
         share_obs = self.share_obs[:-1].reshape(-1, *self.share_obs.shape[3:])
@@ -227,7 +249,7 @@ class OnPolicyCriticBufferFP:
         masks = self.masks[:-1].reshape(-1, 1)
 
         for indices in sampler:
-            # share_obs shape: 
+            # share_obs shape:
             # (episode_length * n_rollout_threads * num_agents, *share_obs_shape) --> (mini_batch_size, *share_obs_shape)
             share_obs_batch = share_obs[indices]
             rnn_states_critic_batch = rnn_states_critic[indices]
@@ -239,7 +261,7 @@ class OnPolicyCriticBufferFP:
 
     def naive_recurrent_generator_critic(self, critic_num_mini_batch):
         """Training data generator for critic that uses RNN network.
-        This generator does not split the trajectories into chunks, 
+        This generator does not split the trajectories into chunks,
         and therefore maybe less efficient than the recurrent_generator_critic in training.
         Args:
             critic_num_mini_batch: (int) Number of mini batches for critic.
@@ -278,7 +300,9 @@ class OnPolicyCriticBufferFP:
             for offset in range(num_envs_per_batch):
                 ind = perm[start_ind + offset]
                 share_obs_batch.append(share_obs[:-1, ind])
-                rnn_states_critic_batch.append(rnn_states_critic[0:1, ind])  # only need the first state
+                rnn_states_critic_batch.append(
+                    rnn_states_critic[0:1, ind]
+                )  # only need the first state
                 value_preds_batch.append(value_preds[:-1, ind])
                 return_batch.append(returns[:-1, ind])
                 masks_batch.append(masks[:-1, ind])
@@ -305,7 +329,7 @@ class OnPolicyCriticBufferFP:
 
     def recurrent_generator_critic(self, critic_num_mini_batch, data_chunk_length):
         """Training data generator for critic that uses RNN network.
-        This generator splits the trajectories into chunks of length data_chunk_length, 
+        This generator splits the trajectories into chunks of length data_chunk_length,
         and therefore maybe more efficient than the naive_recurrent_generator_actor in training.
         Args:
             critic_num_mini_batch: (int) Number of mini batches for critic.
@@ -318,9 +342,9 @@ class OnPolicyCriticBufferFP:
         data_chunks = batch_size // data_chunk_length
         mini_batch_size = data_chunks // critic_num_mini_batch
 
-        assert episode_length % data_chunk_length == 0, (
-            f"episode length ({episode_length}) must be a multiple of data chunk length ({data_chunk_length})."
-        )
+        assert (
+            episode_length % data_chunk_length == 0
+        ), f"episode length ({episode_length}) must be a multiple of data chunk length ({data_chunk_length})."
         assert data_chunks >= 2, "need larger batch size"
 
         # shuffle indices
@@ -366,7 +390,9 @@ class OnPolicyCriticBufferFP:
                 value_preds_batch.append(value_preds[ind : ind + data_chunk_length])
                 return_batch.append(returns[ind : ind + data_chunk_length])
                 masks_batch.append(masks[ind : ind + data_chunk_length])
-                rnn_states_critic_batch.append(rnn_states_critic[ind])  # only the beginning rnn states are needed
+                rnn_states_critic_batch.append(
+                    rnn_states_critic[ind]
+                )  # only the beginning rnn states are needed
 
             L, N = data_chunk_length, mini_batch_size
             # These are all ndarrays of size (data_chunk_length, mini_batch_size, *dim)
