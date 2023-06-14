@@ -1,4 +1,4 @@
-"""Train a algorithm."""
+"""Train an algorithm."""
 import argparse
 import json
 from harl.utils.configs_tools import get_defaults_yaml_args, update_args
