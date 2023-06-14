@@ -1,0 +1,3 @@
+[submodule "harl/envs/lag/JSBSim/data"]
+	path = harl/envs/lag/JSBSim/data
+	url = https://github.com/JSBSim-Team/jsbsim.git
