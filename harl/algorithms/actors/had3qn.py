@@ -6,6 +6,7 @@ from harl.models.value_function_models.dueling_q_net import DuelingQNet
 from harl.utils.envs_tools import check
 from harl.algorithms.actors.off_policy_base import OffPolicyBase
 
+
 class HAD3QN(OffPolicyBase):
     def __init__(self, args, obs_space, act_space, device=torch.device("cpu")):
         assert (

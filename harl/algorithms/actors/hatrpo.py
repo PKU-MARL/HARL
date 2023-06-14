@@ -24,6 +24,9 @@ class HATRPO(OnPolicyBase):
             act_space: (gym.spaces) action space.
             device: (torch.device) device to use for tensor operations.
         """
+        assert (
+                act_space.__class__.__name__ != "MultiDiscrete"
+        ), "only continuous and discrete action space is supported by HATRPO."
         super(HATRPO, self).__init__(args, obs_space, act_space, device)
 
         self.kl_threshold = args["kl_threshold"]

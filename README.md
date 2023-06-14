@@ -37,11 +37,24 @@ pip install -e .
 
 ### Install Environments Dependencies
 
-Along with HARL algorithms, we also implement the interfaces for six common environments ([SMAC](https://github.com/oxwhirl/smac), [SMACv2](https://github.com/oxwhirl/smacv2), [MAMuJoCo](https://github.com/schroederdewitt/multiagent_mujoco), [MPE](https://pettingzoo.farama.org/environments/mpe/), [Google Research Football](https://github.com/google-research/football), [Bi-DexterousHands](https://github.com/PKU-MARL/DexterousHands)) and they can be used directly. (We also implement the interface for [Gym](https://www.gymlibrary.dev/). Gym is a single-agent environment, which can be seen as a special case of multi-agent environments. It is included mainly for reference purposes.) You may choose to install the dependencies to the environments you want to use.
+Along with HARL algorithms, we also implement the interfaces for seven common environments ([SMAC](https://github.com/oxwhirl/smac), [SMACv2](https://github.com/oxwhirl/smacv2), [MAMuJoCo](https://github.com/schroederdewitt/multiagent_mujoco), [MPE](https://pettingzoo.farama.org/environments/mpe/), [Google Research Football](https://github.com/google-research/football), [Bi-DexterousHands](https://github.com/PKU-MARL/DexterousHands), [Light Aircraft Game](https://github.com/liuqh16/CloseAirCombat)) and they can be used directly. (We also implement the interface for [Gym](https://www.gymlibrary.dev/). Gym is a single-agent environment, which can be seen as a special case of multi-agent environments. It is included mainly for reference purposes.) You may choose to install the dependencies to the environments you want to use.
 
 **Install Dependencies of Bi-DexterousHands**
 
 Bi-DexterousHands depend on IsaacGym. The hardware requirements of IsaacGym has to be satisfied. To install IsaacGym, download IsaacGym Preview 4 release from [its official website](https://developer.nvidia.com/isaac-gym/download). Then run `pip install -e .` under its `python` folder.
+
+**Install Light Aircraft Game**
+
+[Light Aircraft Game](https://github.com/liuqh16/CloseAirCombat) (LAG) is a recently developed cooperative-competitive environment for red and blue aircraft games, offering various settings such as single control, 1v1, and 2v2 scenarios. In the context of multi-agent scenarios, LAG currently supports self-play only for 2v2 settings. To address this limitation, we introduce novel cooperative non-weapon and shoot-missile tasks where two agents collaborate to combat two opponents controlled by the built-in AI. In the non-weapon task, agents are trained to fly towards the opponents' tails while maintaining a suitable distance. In the shoot-missile task, agents learn to dodge opponent missiles and launch their own missiles to destroy the opponents.
+
+To install LAG, run the following command:
+```shell
+# Install dependencies
+pip install torch pymap3d jsbsim==1.1.6 geographiclib gym==0.21.0 wandb icecream setproctitle
+# Initialize submodules(*JSBSim-Team/jsbsim*)
+git submodule init
+git submodule update
+```
 
 **Install Google Research Football**
 
@@ -189,16 +202,17 @@ After these steps, you can apply the algorithms immediately as above.
 
 ### Application Scope of Algorithms
 
-|        | Continuous action space | Discrete action space |
-| :----: | :---------------------: | :-------------------: |
-| HAPPO  | √                       | √                     |
-| HATRPO | √                       | √                     |
-| HAA2C  | √                       | √                     |
-| HADDPG | √                       |                       |
-| HATD3  | √                       |                       |
-| HAD3QN |                         | √                     |
-| MAPPO  | √                       | √                     |
-| MADDPG | √                       |                       |
+|        | Continuous action space | Discrete action space | Multi Discrete action space |
+|:------:| :---------------------: | :-------------------: |:---------------------------:|
+| HAPPO  | √                       | √                     |              √              |
+| HATRPO | √                       | √                     |                             |
+| HAA2C  | √                       | √                     |              √              |
+| HADDPG | √                       |                       |                             |
+| HATD3  | √                       |                       |                             |
+| HASAC  | √                       | √                     |              √              |
+| HAD3QN |                         | √                     |                             |
+| MAPPO  | √                       | √                     |              √              |
+| MADDPG | √                       |                       |                             |
 
 
 

@@ -9,12 +9,24 @@ def get_combined_dim(cent_obs_feature_dim, act_spaces):
     """Get the combined dimension of central observation and individual actions."""
     combined_dim = cent_obs_feature_dim
     for space in act_spaces:
-        combined_dim += space.shape[0]
+        if space.__class__.__name__ == 'Box':
+            combined_dim += space.shape[0]
+        elif space.__class__.__name__ == 'Discrete':
+            combined_dim += space.n
+        else:
+            action_dims = space.nvec
+            for action_dim in action_dims:
+                combined_dim += action_dim
     return combined_dim
 
 
 class ContinuousQNet(nn.Module):
-    """Q Network for continuous action space."""
+    """Q Network for continuous and discrete action space. Outputs the q value given global states and actions.
+    Note that the name ContinuousQNet emphasizes its structure that takes observations and actions as input and outputs
+    the q values. Thus, it is commonly used to handle continuous action space; meanwhile, it can also be used in
+    discrete action space.
+    """
+
     def __init__(self, args, cent_obs_space, act_spaces, device=torch.device("cpu")):
         super(ContinuousQNet, self).__init__()
         activation_func = args["activation_func"]

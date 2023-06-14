@@ -7,7 +7,15 @@ from harl.models.base.plain_mlp import PlainMLP
 
 class DeterministicPolicy(nn.Module):
     """Deterministic policy network for continuous action space."""
+
     def __init__(self, args, obs_space, action_space, device=torch.device("cpu")):
+        """Initialize DeterministicPolicy model.
+        Args:
+            args: (dict) arguments containing relevant model information.
+            obs_space: (gym.Space) observation space.
+            action_space: (gym.Space) action space.
+            device: (torch.device) specifies the device to run on (cpu/gpu).
+        """
         super().__init__()
         self.tpdv = dict(dtype=torch.float32, device=device)
         hidden_sizes = args["hidden_sizes"]

@@ -5,6 +5,7 @@ from harl.models.policy_models.deterministic_policy import DeterministicPolicy
 from harl.utils.envs_tools import check
 from harl.algorithms.actors.off_policy_base import OffPolicyBase
 
+
 class HADDPG(OffPolicyBase):
     def __init__(self, args, obs_space, act_space, device=torch.device("cpu")):
         assert (

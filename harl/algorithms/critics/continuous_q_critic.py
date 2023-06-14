@@ -3,17 +3,24 @@ from copy import deepcopy
 import torch
 from harl.models.value_function_models.continuous_q_net import ContinuousQNet
 from harl.utils.envs_tools import check
-from harl.utils.models_tools import update_linear_schedule
+from harl.utils.models_tools import update_linear_schedule, mse_loss
 
 
 class ContinuousQCritic:
     """Continuous Q Critic.
     Critic that learns a Q-function. The action space is continuous.
+    Note that the name ContinuousQCritic emphasizes its structure that takes observations and actions as input and
+    outputs the q values. Thus, it is commonly used to handle continuous action space; meanwhile, it can also be used in
+    discrete action space. For now, it only supports continuous action space, but we will enhance its capability to
+    include discrete action space in the future.
     """
 
-    def __init__(self, args, share_obs_space, act_space, device=torch.device("cpu")):
+    def __init__(self, args, share_obs_space, act_space, num_agents, state_type, device=torch.device("cpu")):
         """Initialize the critic."""
         self.tpdv = dict(dtype=torch.float32, device=device)
+        self.act_space = act_space
+        self.num_agents = num_agents
+        self.state_type = state_type
         self.critic = ContinuousQNet(args, share_obs_space, act_space, device)
         self.target_critic = deepcopy(self.critic)
         for p in self.target_critic.parameters():
@@ -90,7 +97,7 @@ class ContinuousQCritic:
         else:
             q_targets = reward + gamma * next_q_values * (1 - done)
         critic_loss = torch.mean(
-            torch.nn.functional.mse_loss(self.critic(share_obs, actions), q_targets)
+            mse_loss(self.critic(share_obs, actions) - q_targets)
         )
         self.critic_optimizer.zero_grad()
         critic_loss.backward()

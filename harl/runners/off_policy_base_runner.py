@@ -4,6 +4,8 @@ import time
 import torch
 import numpy as np
 import setproctitle
+from harl.common.valuenorm import ValueNorm
+from torch.distributions import Categorical
 from harl.utils.trans_tools import _t2n
 from harl.utils.envs_tools import (
     make_eval_env,
@@ -20,7 +22,9 @@ from harl.utils.configs_tools import (
 )
 from harl.algorithms.actors import ALGO_REGISTRY
 from harl.algorithms.critics import CRITIC_REGISTRY
-from harl.common.buffers.off_policy_buffer import OffPolicyBuffer
+from harl.common.buffers.off_policy_buffer_ep import OffPolicyBufferEP
+from harl.common.buffers.off_policy_buffer_fp import OffPolicyBufferFP
+
 
 class OffPolicyBaseRunner:
     """Base runner for off-policy algorithms."""
@@ -41,6 +45,7 @@ class OffPolicyBaseRunner:
         else:
             self.policy_freq = 1
 
+        self.state_type = env_args.get("state_type", "EP")
         self.share_param = algo_args["algo"]['share_param']
         self.fixed_order = algo_args["algo"]['fixed_order']
 
@@ -89,6 +94,7 @@ class OffPolicyBaseRunner:
                 else None
             )
         self.num_agents = get_num_agents(args["env"], env_args, self.envs)
+        self.agent_deaths = np.zeros((self.algo_args['train']['n_rollout_threads'], self.num_agents, 1))
 
         self.action_spaces = self.envs.action_space
         for agent_id in range(self.num_agents):
@@ -131,20 +137,56 @@ class OffPolicyBaseRunner:
                 {**algo_args["train"], **algo_args["model"], **algo_args["algo"]},
                 self.envs.share_observation_space[0],
                 self.envs.action_space,
+                self.num_agents,
+                self.state_type,
                 device=self.device,
             )
-            self.buffer = OffPolicyBuffer(
-                {**algo_args["train"], **algo_args["model"], **algo_args["algo"]},
-                self.envs.share_observation_space[0],
-                self.num_agents,
-                self.envs.observation_space,
-                self.envs.action_space,
-            )
+            if self.state_type == "EP":
+                self.buffer = OffPolicyBufferEP(
+                    {**algo_args["train"], **algo_args["model"], **algo_args["algo"]},
+                    self.envs.share_observation_space[0],
+                    self.num_agents,
+                    self.envs.observation_space,
+                    self.envs.action_space,
+                )
+            elif self.state_type == "FP":
+                self.buffer = OffPolicyBufferFP(
+                    {**algo_args["train"], **algo_args["model"], **algo_args["algo"]},
+                    self.envs.share_observation_space[0],
+                    self.num_agents,
+                    self.envs.observation_space,
+                    self.envs.action_space,
+                )
+            else:
+                raise NotImplementedError
+
+        if "use_valuenorm" in self.algo_args['train'].keys() and self.algo_args['train']['use_valuenorm']:
+            self.value_normalizer = ValueNorm(1, device=self.device)
+        else:
+            self.value_normalizer = None
 
         if self.algo_args['train']['model_dir'] is not None:
             self.restore()
 
         self.total_it = 0  # total iteration
+
+        if "auto_alpha" in self.algo_args['algo'].keys() and self.algo_args['algo']['auto_alpha']:
+            self.target_entropy = []
+            for agent_id in range(self.num_agents):
+                if self.envs.action_space[agent_id].__class__.__name__ == "Box":  # Differential entropy can be negative
+                    self.target_entropy.append(-np.prod(self.envs.action_space[agent_id].shape))
+                else:  # Discrete entropy is always positive. Thus we set the max possible entropy as the target entropy
+                    self.target_entropy.append(-0.98 * np.log(1.0 / np.prod(self.envs.action_space[agent_id].shape)))
+            self.log_alpha = []
+            self.alpha_optimizer = []
+            self.alpha = []
+            for agent_id in range(self.num_agents):
+                _log_alpha = torch.zeros(1, requires_grad=True, device=self.device)
+                self.log_alpha.append(_log_alpha)
+                self.alpha_optimizer.append(torch.optim.Adam([_log_alpha], lr=self.algo_args['algo']['alpha_lr']))
+                self.alpha.append(torch.exp(_log_alpha.detach()))
+        elif "alpha" in self.algo_args['algo'].keys():
+            self.alpha = [self.algo_args['algo']['alpha']] * self.num_agents
 
     def run(self):
         """Run the training (or rendering) pipeline."""
@@ -153,7 +195,7 @@ class OffPolicyBaseRunner:
             return
         # warmup
         print("start warmup")
-        obs, share_obs = self.warmup()
+        obs, share_obs, available_actions = self.warmup()
         print("finish warmup, start training")
         # train and eval
         steps = (
@@ -163,37 +205,30 @@ class OffPolicyBaseRunner:
             self.algo_args['train']['update_per_train'] * self.algo_args['train']['train_interval']
         )
         for step in range(1, steps + 1):
-            actions = self.get_actions(obs, add_random=True)
-            new_obs, new_share_obs, reward, done, infos, _ = self.envs.step(
+            actions = self.get_actions(obs, available_actions=available_actions, add_random=True)
+            new_obs, new_share_obs, rewards, dones, infos, new_available_actions = self.envs.step(
                 actions
-            )  # reward: (n_threads, n_agents, 1); done: (n_threads, n_agents)
-            terms = np.full((self.algo_args['train']['n_rollout_threads'], 1), False)
+            )  # rewards: (n_threads, n_agents, 1); dones: (n_threads, n_agents)
+            # available_actions: (n_threads, ) of None or (n_threads, n_agents, action_number)
             next_obs = new_obs.copy()
             next_share_obs = new_share_obs.copy()
-            for i in range(self.algo_args['train']['n_rollout_threads']):
-                if done[i][0]:
-                    if not (
-                        "bad_transition" in infos[i][0].keys()
-                        and infos[i][0]["bad_transition"] == True
-                    ):  # not trunc
-                        terms[i][0] = True
-                    next_obs[i] = infos[i][0]["original_obs"].copy()
-                    next_share_obs[i] = infos[i][0]["original_state"].copy()
-            reward = reward[:, 0]
-            done = np.expand_dims(np.all(done, axis=1), axis=-1)
+            next_available_actions = new_available_actions.copy()
             data = (
-                share_obs[:, 0],
+                share_obs,
                 obs.transpose(1, 0, 2),
                 actions.transpose(1, 0, 2),
-                reward,
-                done,
-                terms,
-                next_share_obs[:, 0],
-                next_obs.transpose(1, 0, 2),
+                available_actions.transpose(1, 0, 2) if len(np.array(available_actions).shape) == 3 else None,
+                rewards,
+                dones,
+                infos,
+                next_share_obs,
+                next_obs,
+                next_available_actions.transpose(1, 0, 2) if len(np.array(available_actions).shape) == 3 else None
             )
-            self.buffer.insert(data)
+            self.insert(data)
             obs = new_obs
             share_obs = new_share_obs
+            available_actions = new_available_actions
             if step % self.algo_args['train']['train_interval'] == 0:
                 if self.algo_args['train']['use_linear_lr_decay']:
                     if self.share_param:
@@ -227,66 +262,163 @@ class OffPolicyBaseRunner:
         )
         # obs: (n_threads, n_agents, dim)
         # share_obs: (n_threads, n_agents, dim)
-        obs, share_obs, _ = self.envs.reset()
+        # available_actions: (threads, n_agents, dim)
+        obs, share_obs, available_actions = self.envs.reset()
         for _ in range(warmup_steps):
             # action: (n_threads, n_agents, dim)
-            actions = self.sample_actions()
-            new_obs, new_share_obs, reward, done, infos, _ = self.envs.step(actions)
-            terms = np.full((self.algo_args['train']['n_rollout_threads'], 1), False)
+            actions = self.sample_actions(available_actions)
+            new_obs, new_share_obs, rewards, dones, infos, new_available_actions = self.envs.step(actions)
             next_obs = new_obs.copy()
             next_share_obs = new_share_obs.copy()
-            for i in range(self.algo_args['train']['n_rollout_threads']):
-                if done[i][0]:
-                    if not (
-                        "bad_transition" in infos[i][0].keys()
-                        and infos[i][0]["bad_transition"] == True
-                    ):
-                        terms[i][0] = True
-                    next_obs[i] = infos[i][0]["original_obs"].copy()
-                    next_share_obs[i] = infos[i][0]["original_state"].copy()
+            next_available_actions = new_available_actions.copy()
             data = (
-                share_obs[:, 0],
+                share_obs,
                 obs.transpose(1, 0, 2),
                 actions.transpose(1, 0, 2),
-                reward[:, 0],
-                np.expand_dims(done, axis=-1)[:, 0],
-                terms,
-                next_share_obs[:, 0],
-                next_obs.transpose(1, 0, 2),
+                available_actions.transpose(1, 0, 2) if len(np.array(available_actions).shape) == 3 else None,
+                rewards,
+                dones,
+                infos,
+                next_share_obs,
+                next_obs,
+                next_available_actions.transpose(1, 0, 2) if len(np.array(available_actions).shape) == 3 else None
             )
-            self.buffer.insert(data)
+            self.insert(data)
             obs = new_obs
             share_obs = new_share_obs
-        return obs, share_obs
-    
-    def sample_actions(self):
+            available_actions = new_available_actions
+        return obs, share_obs, available_actions
+
+    def insert(self, data):
+        (
+            share_obs,  # (n_threads, n_agents, share_obs_dim)
+            obs,  # (n_agents, n_threads, obs_dim)
+            actions,  # (n_agents, n_threads, action_dim)
+            available_actions,  # None or (n_agents, n_threads, action_number)
+            rewards,  # (n_threads, n_agents, 1)
+            dones,  # (n_threads, n_agents)
+            infos,  # type: list, shape: (n_threads, n_agents)
+            next_share_obs,  # (n_threads, n_agents, next_share_obs_dim)
+            next_obs,  # (n_threads, n_agents, next_obs_dim)
+            next_available_actions,  # None or (n_agents, n_threads, next_action_number)
+        ) = data
+
+        dones_env = np.all(dones, axis=1)  # if all agents are done, then env is done
+
+        # valid_transition denotes whether each transition is valid or not (invalid if corresponding agent is dead)
+        # shape: (n_threads, n_agents, 1)
+        valid_transitions = 1 - self.agent_deaths
+
+        self.agent_deaths = np.expand_dims(dones, axis=-1)
+
+        # terms use False to denote truncation and True to denote termination
+        if self.state_type == "EP":
+            terms = np.full((self.algo_args['train']['n_rollout_threads'], 1), False)
+            for i in range(self.algo_args['train']['n_rollout_threads']):
+                if dones_env[i]:
+                    if not (
+                            "bad_transition" in infos[i][0].keys()
+                            and infos[i][0]["bad_transition"] == True
+                    ):
+                        terms[i][0] = True
+        elif self.state_type == "FP":
+            terms = np.full((self.algo_args['train']['n_rollout_threads'], self.num_agents, 1), False)
+            for i in range(self.algo_args['train']['n_rollout_threads']):
+                for agent_id in range(self.num_agents):
+                    if dones[i][agent_id]:
+                        if not (
+                                "bad_transition" in infos[i][agent_id].keys()
+                                and infos[i][agent_id]["bad_transition"] == True
+                        ):
+                            terms[i][agent_id][0] = True
+
+        for i in range(self.algo_args['train']['n_rollout_threads']):
+            if dones_env[i]:
+                self.agent_deaths = np.zeros((self.algo_args['train']['n_rollout_threads'], self.num_agents, 1))
+                if "original_obs" in infos[i][0]:
+                    next_obs[i] = infos[i][0]["original_obs"].copy()
+                if "original_state" in infos[i][0]:
+                    next_share_obs[i] = infos[i][0]["original_state"].copy()
+
+        if self.state_type == "EP":
+            data = (
+                share_obs[:, 0],  # (n_threads, share_obs_dim)
+                obs,  # (n_agents, n_threads, obs_dim)
+                actions,  # (n_agents, n_threads, action_dim)
+                available_actions,  # None or (n_agents, n_threads, action_number)
+                rewards[:, 0],  # (n_threads, 1)
+                np.expand_dims(dones_env, axis=-1),  # (n_threads, 1)
+                valid_transitions.transpose(1, 0, 2),  # (n_agents, n_threads, 1)
+                terms,  # (n_threads, 1)
+                next_share_obs[:, 0],  # (n_threads, next_share_obs_dim)
+                next_obs.transpose(1, 0, 2),  # (n_agents, n_threads, next_obs_dim)
+                next_available_actions,  # None or (n_agents, n_threads, next_action_number)
+            )
+        elif self.state_type == "FP":
+            data = (
+                share_obs,  # (n_threads, n_agents, share_obs_dim)
+                obs,  # (n_agents, n_threads, obs_dim)
+                actions,  # (n_agents, n_threads, action_dim)
+                available_actions,  # None or (n_agents, n_threads, action_number)
+                rewards,  # (n_threads, n_agents, 1)
+                np.expand_dims(dones, axis=-1),  # (n_threads, n_agents, 1)
+                valid_transitions.transpose(1, 0, 2),  # (n_agents, n_threads, 1)
+                terms,  # (n_threads, n_agents, 1)
+                next_share_obs,  # (n_threads, n_agents, next_share_obs_dim)
+                next_obs.transpose(1, 0, 2),  # (n_agents, n_threads, next_obs_dim)
+                next_available_actions,  # None or (n_agents, n_threads, next_action_number)
+            )
+
+        self.buffer.insert(data)
+
+    def sample_actions(self, available_actions=None):
         """Sample random actions for warmup.
+        Args:
+            available_actions: (np.ndarray) denotes which actions are available to agent (if None, all actions available),
+                                 shape is (n_threads, n_agents, action_number) or (n_threads, ) of None
         Returns:
             actions: (np.ndarray) sampled actions, shape is (n_threads, n_agents, dim)
         """
         actions = []
         for agent_id in range(self.num_agents):
             action = []
-            for _ in range(self.algo_args['train']['n_rollout_threads']):
-                action.append(self.action_spaces[agent_id].sample())
+            for thread in range(self.algo_args['train']['n_rollout_threads']):
+                if available_actions[thread] is None:
+                    action.append(self.action_spaces[agent_id].sample())
+                else:
+                    action.append(Categorical(torch.tensor(available_actions[thread, agent_id, :])).sample())
             actions.append(action)
-        if self.envs.action_space[agent_id].__class__.__name__ == "Box":
-            return np.array(actions).transpose(1, 0, 2)
+        if self.envs.action_space[agent_id].__class__.__name__ == "Discrete":
+            return np.expand_dims(np.array(actions).transpose(1, 0), axis=-1)
 
-        return np.expand_dims(np.array(actions).transpose(1, 0), axis=-1)
+        return np.array(actions).transpose(1, 0, 2)
 
     @torch.no_grad()
-    def get_actions(self, obs, add_random=True):
+    def get_actions(self, obs, available_actions=None, add_random=True):
         """Get actions for rollout.
         Args:
             obs: (np.ndarray) input observation, shape is (n_threads, n_agents, dim)
+            available_actions: (np.ndarray) denotes which actions are available to agent (if None, all actions available),
+                                 shape is (n_threads, n_agents, action_number) or (n_threads, ) of None
             add_random: (bool) whether to add randomness
         Returns:
             actions: (np.ndarray) agent actions, shape is (n_threads, n_agents, dim)
         """
-        actions = []
-        for agent_id in range(self.num_agents):
-            actions.append(_t2n(self.actor[agent_id].get_actions(obs[:, agent_id], add_random)))
+        if self.args["algo"] == "hasac":
+            actions = []
+            for agent_id in range(self.num_agents):
+                if len(np.array(available_actions).shape) == 3:  # (n_threads, n_agents, action_number)
+                    actions.append(_t2n(self.actor[agent_id].get_actions(
+                        obs[:, agent_id], available_actions[:, agent_id], add_random))
+                    )
+                else:  # (n_threads, ) of None
+                    actions.append(
+                        _t2n(self.actor[agent_id].get_actions(obs[:, agent_id], stochastic=add_random))
+                    )
+        else:
+            actions = []
+            for agent_id in range(self.num_agents):
+                actions.append(_t2n(self.actor[agent_id].get_actions(obs[:, agent_id], add_random)))
         return np.array(actions).transpose(1, 0, 2)
 
     def train(self):
@@ -302,13 +434,17 @@ class OffPolicyBaseRunner:
             one_episode_rewards.append([])
             eval_episode_rewards.append([])
         eval_episode = 0
+        if "smac" in self.args["env"]:
+            eval_battles_won = 0
+        if "football" in self.args["env"]:
+            eval_score_cnt = 0
         episode_lens = []
         one_episode_len = np.zeros(self.algo_args['eval']['n_eval_rollout_threads'], dtype=np.int)
 
-        eval_obs, eval_share_obs, _ = self.eval_envs.reset()
+        eval_obs, eval_share_obs, eval_available_actions = self.eval_envs.reset()
 
         while True:
-            eval_actions = self.get_actions(eval_obs, False)
+            eval_actions = self.get_actions(eval_obs, available_actions=eval_available_actions, add_random=False)
             (
                 eval_obs,
                 eval_share_obs,
@@ -327,6 +463,12 @@ class OffPolicyBaseRunner:
             for eval_i in range(self.algo_args['eval']['n_eval_rollout_threads']):
                 if eval_dones_env[eval_i]:
                     eval_episode += 1
+                    if "smac" in self.args["env"]:
+                        if eval_infos[eval_i][0]['won']:
+                            eval_battles_won += 1
+                    if "football" in self.args["env"]:
+                        if eval_infos[eval_i][0]["score_reward"] > 0:
+                            eval_score_cnt += 1
                     eval_episode_rewards[eval_i].append(np.sum(one_episode_rewards[eval_i], axis=0))
                     one_episode_rewards[eval_i] = []
                     episode_lens.append(one_episode_len[eval_i].copy())
@@ -339,10 +481,32 @@ class OffPolicyBaseRunner:
                 )
                 eval_avg_rew = np.mean(eval_episode_rewards)
                 eval_avg_len = np.mean(episode_lens)
-                print(
-                    f'Eval average episode reward is {eval_avg_rew}, eval average episode length is {eval_avg_len}.\n'
-                )
-                self.log_file.write(",".join(map(str, [step, eval_avg_rew, eval_avg_len])) + "\n")
+                if "smac" in self.args["env"]:
+                    print(
+                        "Eval win rate is {}, eval average episode rewards is {}, eval average episode length is {}.".format(
+                            eval_battles_won / eval_episode, eval_avg_rew, eval_avg_len
+                        )
+                    )
+                elif "football" in self.args["env"]:
+                    print(
+                        "Eval score rate is {}, eval average episode rewards is {}, eval average episode length is {}.".format(
+                            eval_score_cnt / eval_episode, eval_avg_rew, eval_avg_len
+                        )
+                    )
+                else:
+                    print(
+                        f'Eval average episode reward is {eval_avg_rew}, eval average episode length is {eval_avg_len}.\n'
+                    )
+                if "smac" in self.args["env"]:
+                    self.log_file.write(
+                        ",".join(map(str, [step, eval_avg_rew, eval_avg_len, eval_battles_won / eval_episode])) + "\n"
+                    )
+                elif "football" in self.args["env"]:
+                    self.log_file.write(
+                        ",".join(map(str, [step, eval_avg_rew, eval_avg_len, eval_score_cnt / eval_episode])) + "\n"
+                    )
+                else:
+                    self.log_file.write(",".join(map(str, [step, eval_avg_rew, eval_avg_len])) + "\n")
                 self.log_file.flush()
                 self.writter.add_scalar("eval_average_episode_rewards", eval_avg_rew, step)
                 self.writter.add_scalar("eval_average_episode_length", eval_avg_len, step)
@@ -355,14 +519,16 @@ class OffPolicyBaseRunner:
         if self.manual_expand_dims:
             # this env needs manual expansion of the num_of_parallel_envs dimension
             for _ in range(self.algo_args['render']['render_episodes']):
-                eval_obs, _, _ = self.envs.reset()
+                eval_obs, _, eval_available_actions = self.envs.reset()
                 eval_obs = np.expand_dims(np.array(eval_obs), axis=0)
+                eval_available_actions = np.array([eval_available_actions])
                 rewards = 0
                 while True:
-                    eval_actions = self.get_actions(eval_obs, False)
-                    eval_obs, _, eval_rewards, eval_dones, _, _ = self.envs.step(eval_actions[0])
+                    eval_actions = self.get_actions(eval_obs, available_actions=eval_available_actions, add_random=False)
+                    eval_obs, _, eval_rewards, eval_dones, _, eval_available_actions = self.envs.step(eval_actions[0])
                     rewards += eval_rewards[0][0]
                     eval_obs = np.expand_dims(np.array(eval_obs), axis=0)
+                    eval_available_actions = np.array([eval_available_actions])
                     if self.manual_render:
                         self.envs.render()
                     if self.manual_delay:
@@ -374,11 +540,11 @@ class OffPolicyBaseRunner:
             # this env does not need manual expansion of the num_of_parallel_envs dimension
             # such as dexhands, which instantiates a parallel env of 64 pair of hands
             for _ in range(self.algo_args['render']['render_episodes']):
-                eval_obs, _, _ = self.envs.reset()
+                eval_obs, _, eval_available_actions = self.envs.reset()
                 rewards = 0
                 while True:
-                    eval_actions = self.get_actions(eval_obs, False)
-                    eval_obs, _, eval_rewards, eval_dones, _, _ = self.envs.step(eval_actions)
+                    eval_actions = self.get_actions(eval_obs, available_actions=eval_available_actions, add_random=False)
+                    eval_obs, _, eval_rewards, eval_dones, _, eval_available_actions = self.envs.step(eval_actions)
                     rewards += eval_rewards[0][0][0]
                     if self.manual_render:
                         self.envs.render()
@@ -399,12 +565,22 @@ class OffPolicyBaseRunner:
             self.actor[agent_id].restore(self.algo_args['train']['model_dir'], agent_id)
         if not self.algo_args['render']['use_render']:
             self.critic.restore(self.algo_args['train']['model_dir'])
+            if self.value_normalizer is not None:
+                value_normalizer_state_dict = torch.load(
+                    str(self.algo_args['train']['model_dir']) + "/value_normalizer" + ".pt"
+                )
+                self.value_normalizer.load_state_dict(value_normalizer_state_dict)
 
     def save(self):
         """Save the model"""
         for agent_id in range(self.num_agents):
             self.actor[agent_id].save(self.save_dir, agent_id)
         self.critic.save(self.save_dir)
+        if self.value_normalizer is not None:
+            torch.save(
+                self.value_normalizer.state_dict(),
+                str(self.save_dir) + "/value_normalizer" + ".pt",
+            )
 
     def close(self):
         """Close environment, writter, and log file."""
