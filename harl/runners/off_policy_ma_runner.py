@@ -3,24 +3,27 @@ import copy
 import torch
 from harl.runners.off_policy_base_runner import OffPolicyBaseRunner
 
+
 class OffPolicyMARunner(OffPolicyBaseRunner):
     """Runner for off-policy MA algorithms."""
-
 
     def train(self):
         """Train the model"""
         self.total_it += 1
         data = self.buffer.sample()
         (
-            sp_share_obs,  # (batch_size, dim)
+            sp_share_obs,  # EP: (batch_size, dim), FP: (n_agents * batch_size, dim)
             sp_obs,  # (n_agents, batch_size, dim)
             sp_actions,  # (n_agents, batch_size, dim)
-            sp_reward,  # (batch_size, 1)
-            sp_done,  # (batch_size, 1)
-            sp_term,  # (batch_size, 1)
-            sp_next_share_obs,  # (batch_size, dim)
+            sp_available_actions,  # (n_agents, batch_size, dim)
+            sp_reward,  # EP: (batch_size, 1), FP: (n_agents * batch_size, 1)
+            sp_done,  # EP: (batch_size, 1), FP: (n_agents * batch_size, 1)
+            sp_valid_transition,  # (n_agents, batch_size, 1)
+            sp_term,  # EP: (batch_size, 1), FP: (n_agents * batch_size, 1)
+            sp_next_share_obs,  # EP: (batch_size, dim), FP: (n_agents * batch_size, dim)
             sp_next_obs,  # (n_agents, batch_size, dim)
-            sp_gamma,  # (batch_size, 1)
+            sp_next_available_actions,  # (n_agents, batch_size, dim)
+            sp_gamma,  # EP: (batch_size, 1), FP: (n_agents * batch_size, 1)
         ) = data
         # train critic
         self.critic.turn_on_grad()

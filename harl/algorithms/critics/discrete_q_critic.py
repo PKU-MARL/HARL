@@ -11,11 +11,14 @@ class DiscreteQCritic:
     Critic that learns a Q-function. The action space is discrete.
     """
 
-    def __init__(self, args, share_obs_space, action_spaces, device=torch.device("cpu")):
+    def __init__(self, args, share_obs_space, act_space, num_agents, state_type, device=torch.device("cpu")):
         """Initialize the critic."""
         self.tpdv = dict(dtype=torch.float32, device=device)
         self.tpdv_a = dict(dtype=torch.int64, device=device)
-        self.process_action_spaces(action_spaces)
+        self.act_space = act_space
+        self.num_agents = num_agents
+        self.state_type = state_type
+        self.process_action_spaces(act_space)
         self.critic = DuelingQNet(args, share_obs_space, self.joint_action_dim, device)
         self.target_critic = deepcopy(self.critic)
         for param in self.target_critic.parameters():

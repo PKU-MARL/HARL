@@ -10,11 +10,11 @@ setup(
     license="MIT",
     python_requires=">=3.8",
     install_requires=[
-        "torch>=1.8.0",
+        "torch>=1.9.0",
         "pyyaml>=5.3.1",
         "tensorboard>=2.2.1",
         "tensorboardX",
-        "setproctitle"
+        "setproctitle",
     ],
     classifiers=[
         "License :: OSI Approved :: MIT License",

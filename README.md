@@ -4,20 +4,19 @@
 
 <h1 align="center"> Heterogeneous-Agent Reinforcement Learning </h1>
 
-This repository contains the **official implementation** of **Heterogeneous-Agent Reinforcement Learning (HARL)** algorithms, including **HAPPO**, **HATRPO**, **HAA2C**, **HADDPG**, **HATD3**, and **HAD3QN**, based on PyTorch. ***HARL algorithms are markedly different from MAPPO in that they are generally applicable to heterogeneous agents and are supported by rigorous theories, often achieving superior performance.*** This repository allows researchers and practitioners to easily reproduce our results on six challenging benchmarks or apply HARL algorithms to their intended applications.
+This repository contains the **official implementation** of **Heterogeneous-Agent Reinforcement Learning (HARL)** algorithms, including **HAPPO**, **HATRPO**, **HAA2C**, **HADDPG**, **HATD3**, **HAD3QN**, and **HASAC**, based on PyTorch. ***HARL algorithms are markedly different from MAPPO in that they are generally applicable to heterogeneous agents and are supported by rigorous theories, often achieving superior performance.*** This repository allows researchers and practitioners to easily reproduce our results on seven challenging benchmarks or apply HARL algorithms to their intended applications.
 
 
 
 ## Overview
 
-HARL algorithms are our novel solutions to achieving effective multi-agent cooperation in the general *heterogeneous-agent* settings, without relying on the restrictive *parameter-sharing* trick. As shown in our paper, HARL algorithms enjoy the **monotonic improvement of joint reward** and **convergence to Nash Equilibrium (NE)** guarantees granted by the provably correct **Heterogeneous-Agent Trust Region Learning (HATRL)** and **Heterogeneous-Agent Mirror Learning (HAML)** theories, thus providing a more robust and stable approach to cooperative multi-agent reinforcement learning. Experiment results confirm their superior effectiveness for coordinating heterogeneous agents compared to strong baselines such as MAPPO and QMIX. The following figure is an illustration of the *sequential update scheme* employed by HARL algorithms to achieve coordinated agent updates.
+HARL algorithms are our novel solutions to achieving effective multi-agent cooperation in the general *heterogeneous-agent* settings, without relying on the restrictive *parameter-sharing* trick. As shown in our first paper, HARL algorithms with the standard MARL objective enjoy the **monotonic improvement of joint return** and **convergence to Nash Equilibrium (NE)** guarantees granted by the provably correct **Heterogeneous-Agent Trust Region Learning (HATRL)** and **Heterogeneous-Agent Mirror Learning (HAML)** theories, thus providing a more robust and stable approach to cooperative multi-agent reinforcement learning. To further enhance exploration, we incorporate the maximum entropy principle into our framework, leading to the development of the **Maximum Entropy Heterogeneous-Agent Mirror Learning (MEHAML)** theory and the HASAC algorithm, as presented in our second paper. We establish that any MEHAML-derived algorithm, including HASAC, possesses the desired properties of **monotonic improvement of joint entropy-regularized objective** and **convergence to quantal response equilibrium (QRE)**. Experiment results confirm their superior effectiveness for coordinating heterogeneous agents compared to strong baselines such as MAPPO and QMIX. The following figure is an illustration of the *sequential update scheme* employed by HARL algorithms to achieve coordinated agent updates.
 
 <div align="center">
   <img src="./assets/maad_sus_3_23.png" width="100%"/>
 </div>
 
-For more details, please refer to [our paper](http://arxiv.org/abs/2304.09870).
-
+For more details, please refer to [our papers](http://arxiv.org/abs/2304.09870) (HASAC paper coming soon).
 
 
 ## Installation
@@ -27,7 +26,7 @@ For more details, please refer to [our paper](http://arxiv.org/abs/2304.09870).
 ```shell
 conda create -n harl python=3.8
 conda activate harl
-# install pytorch>=1.8.0 (CUDA>=11.0) manually
+# install pytorch>=1.9.0 (CUDA>=11.0) manually
 git clone https://github.com/PKU-MARL/HARL.git
 cd HARL
 pip install -e .
@@ -37,11 +36,24 @@ pip install -e .
 
 ### Install Environments Dependencies
 
-Along with HARL algorithms, we also implement the interfaces for six common environments ([SMAC](https://github.com/oxwhirl/smac), [SMACv2](https://github.com/oxwhirl/smacv2), [MAMuJoCo](https://github.com/schroederdewitt/multiagent_mujoco), [MPE](https://pettingzoo.farama.org/environments/mpe/), [Google Research Football](https://github.com/google-research/football), [Bi-DexterousHands](https://github.com/PKU-MARL/DexterousHands)) and they can be used directly. (We also implement the interface for [Gym](https://www.gymlibrary.dev/). Gym is a single-agent environment, which can be seen as a special case of multi-agent environments. It is included mainly for reference purposes.) You may choose to install the dependencies to the environments you want to use.
+Along with HARL algorithms, we also implement the interfaces for seven common environments ([SMAC](https://github.com/oxwhirl/smac), [SMACv2](https://github.com/oxwhirl/smacv2), [MAMuJoCo](https://github.com/schroederdewitt/multiagent_mujoco), [MPE](https://pettingzoo.farama.org/environments/mpe/), [Google Research Football](https://github.com/google-research/football), [Bi-DexterousHands](https://github.com/PKU-MARL/DexterousHands), [Light Aircraft Game](https://github.com/liuqh16/CloseAirCombat)) and they can be used directly. (We also implement the interface for [Gym](https://www.gymlibrary.dev/). Gym is a single-agent environment, which can be seen as a special case of multi-agent environments. It is included mainly for reference purposes.) You may choose to install the dependencies to the environments you want to use.
 
 **Install Dependencies of Bi-DexterousHands**
 
 Bi-DexterousHands depend on IsaacGym. The hardware requirements of IsaacGym has to be satisfied. To install IsaacGym, download IsaacGym Preview 4 release from [its official website](https://developer.nvidia.com/isaac-gym/download). Then run `pip install -e .` under its `python` folder.
+
+**Install Light Aircraft Game**
+
+[Light Aircraft Game](https://github.com/liuqh16/CloseAirCombat) (LAG) is a recently developed cooperative-competitive environment for red and blue aircraft games, offering various settings such as single control, 1v1, and 2v2 scenarios. In the context of multi-agent scenarios, LAG currently supports self-play only for 2v2 settings. To address this limitation, we introduce novel cooperative non-weapon and shoot-missile tasks where two agents collaborate to combat two opponents controlled by the built-in AI. In the non-weapon task, agents are trained to fly towards the opponents' tails while maintaining a suitable distance. In the shoot-missile task, agents learn to dodge opponent missiles and launch their own missiles to destroy the opponents.
+
+To install LAG, run the following command:
+```shell
+# Install dependencies
+pip install torch pymap3d jsbsim==1.1.6 geographiclib gym==0.21.0 wandb icecream setproctitle
+# Initialize submodules(*JSBSim-Team/jsbsim*)
+git submodule init
+git submodule update
+```
 
 **Install Google Research Football**
 
@@ -189,16 +201,17 @@ After these steps, you can apply the algorithms immediately as above.
 
 ### Application Scope of Algorithms
 
-|        | Continuous action space | Discrete action space |
-| :----: | :---------------------: | :-------------------: |
-| HAPPO  | √                       | √                     |
-| HATRPO | √                       | √                     |
-| HAA2C  | √                       | √                     |
-| HADDPG | √                       |                       |
-| HATD3  | √                       |                       |
-| HAD3QN |                         | √                     |
-| MAPPO  | √                       | √                     |
-| MADDPG | √                       |                       |
+|        | Continuous action space | Discrete action space | Multi Discrete action space |
+|:------:| :---------------------: | :-------------------: |:---------------------------:|
+| HAPPO  | √                       | √                     |              √              |
+| HATRPO | √                       | √                     |                             |
+| HAA2C  | √                       | √                     |              √              |
+| HADDPG | √                       |                       |                             |
+| HATD3  | √                       |                       |                             |
+| HAD3QN |                         | √                     |                             |
+| HASAC  | √                       | √                     |              √              |
+| MAPPO  | √                       | √                     |              √              |
+| MADDPG | √                       |                       |                             |
 
 
 
@@ -256,6 +269,7 @@ HAPPO consistently outperforms MAPPO, and is also better than the single-agent b
   <img src="./assets/dexhands_learning_curve.jpg" width="100%"/>
 </div>
 
+*The experiment results of HASAC will be updated soon.*
 
 ## Citation
 

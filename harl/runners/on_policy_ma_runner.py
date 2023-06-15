@@ -3,6 +3,7 @@ import numpy as np
 import torch
 from harl.runners.on_policy_base_runner import OnPolicyBaseRunner
 
+
 class OnPolicyMARunner(OnPolicyBaseRunner):
     """Runner for on-policy MA algorithms."""
 

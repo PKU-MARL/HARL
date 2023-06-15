@@ -16,11 +16,12 @@ def main():
             "haa2c",
             "haddpg",
             "hatd3",
+            "hasac",
             "had3qn",
             "maddpg",
             "mappo",
         ],
-        help="Algorithm name. Choose from: happo, hatrpo, haa2c, haddpg, hatd3, had3qn, maddpg, mappo.",
+        help="Algorithm name. Choose from: happo, hatrpo, haa2c, haddpg, hatd3, hasac, had3qn, maddpg, mappo.",
     )
     parser.add_argument(
         "--env",
@@ -34,8 +35,9 @@ def main():
             "football",
             "dexhands",
             "smacv2",
+            "lag",
         ],
-        help="Environment name. Choose from: smac, mamujoco, pettingzoo_mpe, gym, football, dexhands, smacv2.",
+        help="Environment name. Choose from: smac, mamujoco, pettingzoo_mpe, gym, football, dexhands, smacv2, lag.",
     )
     parser.add_argument("--exp_name", type=str, default="installtest", help="Experiment name.")
     parser.add_argument(
