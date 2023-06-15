@@ -4,7 +4,7 @@
 
 <h1 align="center"> Heterogeneous-Agent Reinforcement Learning </h1>
 
-This repository contains the **official implementation** of **Heterogeneous-Agent Reinforcement Learning (HARL)** algorithms, including **HAPPO**, **HATRPO**, **HAA2C**, **HADDPG**, **HATD3**, **HAD3QN**, and **HASAC**, based on PyTorch. ***HARL algorithms are markedly different from MAPPO in that they are generally applicable to heterogeneous agents and are supported by rigorous theories, often achieving superior performance.*** This repository allows researchers and practitioners to easily reproduce our results on six challenging benchmarks or apply HARL algorithms to their intended applications.
+This repository contains the **official implementation** of **Heterogeneous-Agent Reinforcement Learning (HARL)** algorithms, including **HAPPO**, **HATRPO**, **HAA2C**, **HADDPG**, **HATD3**, **HAD3QN**, and **HASAC**, based on PyTorch. ***HARL algorithms are markedly different from MAPPO in that they are generally applicable to heterogeneous agents and are supported by rigorous theories, often achieving superior performance.*** This repository allows researchers and practitioners to easily reproduce our results on seven challenging benchmarks or apply HARL algorithms to their intended applications.
 
 
 
