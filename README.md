@@ -4,20 +4,19 @@
 
 <h1 align="center"> Heterogeneous-Agent Reinforcement Learning </h1>
 
-This repository contains the **official implementation** of **Heterogeneous-Agent Reinforcement Learning (HARL)** algorithms, including **HAPPO**, **HATRPO**, **HAA2C**, **HADDPG**, **HATD3**, and **HAD3QN**, based on PyTorch. ***HARL algorithms are markedly different from MAPPO in that they are generally applicable to heterogeneous agents and are supported by rigorous theories, often achieving superior performance.*** This repository allows researchers and practitioners to easily reproduce our results on six challenging benchmarks or apply HARL algorithms to their intended applications.
+This repository contains the **official implementation** of **Heterogeneous-Agent Reinforcement Learning (HARL)** algorithms, including **HAPPO**, **HATRPO**, **HAA2C**, **HADDPG**, **HATD3**, **HAD3QN**, and **HASAC**, based on PyTorch. ***HARL algorithms are markedly different from MAPPO in that they are generally applicable to heterogeneous agents and are supported by rigorous theories, often achieving superior performance.*** This repository allows researchers and practitioners to easily reproduce our results on six challenging benchmarks or apply HARL algorithms to their intended applications.
 
 
 
 ## Overview
 
-HARL algorithms are our novel solutions to achieving effective multi-agent cooperation in the general *heterogeneous-agent* settings, without relying on the restrictive *parameter-sharing* trick. As shown in our paper, HARL algorithms enjoy the **monotonic improvement of joint reward** and **convergence to Nash Equilibrium (NE)** guarantees granted by the provably correct **Heterogeneous-Agent Trust Region Learning (HATRL)** and **Heterogeneous-Agent Mirror Learning (HAML)** theories, thus providing a more robust and stable approach to cooperative multi-agent reinforcement learning. Experiment results confirm their superior effectiveness for coordinating heterogeneous agents compared to strong baselines such as MAPPO and QMIX. The following figure is an illustration of the *sequential update scheme* employed by HARL algorithms to achieve coordinated agent updates.
+HARL algorithms are our novel solutions to achieving effective multi-agent cooperation in the general *heterogeneous-agent* settings, without relying on the restrictive *parameter-sharing* trick. As shown in our first paper, HARL algorithms with the standard MARL objective enjoy the **monotonic improvement of joint return** and **convergence to Nash Equilibrium (NE)** guarantees granted by the provably correct **Heterogeneous-Agent Trust Region Learning (HATRL)** and **Heterogeneous-Agent Mirror Learning (HAML)** theories, thus providing a more robust and stable approach to cooperative multi-agent reinforcement learning. To further enhance exploration, we incorporate the maximum entropy principle into our framework, leading to the development of the **Maximum Entropy Heterogeneous-Agent Mirror Learning (MEHAML)** theory and the HASAC algorithm, as presented in our second paper. We establish that any MEHAML-derived algorithm, including HASAC, possesses the desired properties of **monotonic improvement of joint entropy-regularized objective** and **convergence to quantal response equilibrium (QRE)**. Experiment results confirm their superior effectiveness for coordinating heterogeneous agents compared to strong baselines such as MAPPO and QMIX. The following figure is an illustration of the *sequential update scheme* employed by HARL algorithms to achieve coordinated agent updates.
 
 <div align="center">
   <img src="./assets/maad_sus_3_23.png" width="100%"/>
 </div>
 
-For more details, please refer to [our paper](http://arxiv.org/abs/2304.09870).
-
+For more details, please refer to [our papers](http://arxiv.org/abs/2304.09870) (HASAC paper coming soon).
 
 
 ## Installation
@@ -209,8 +208,8 @@ After these steps, you can apply the algorithms immediately as above.
 | HAA2C  | √                       | √                     |              √              |
 | HADDPG | √                       |                       |                             |
 | HATD3  | √                       |                       |                             |
-| HASAC  | √                       | √                     |              √              |
 | HAD3QN |                         | √                     |                             |
+| HASAC  | √                       | √                     |              √              |
 | MAPPO  | √                       | √                     |              √              |
 | MADDPG | √                       |                       |                             |
 
@@ -270,6 +269,7 @@ HAPPO consistently outperforms MAPPO, and is also better than the single-agent b
   <img src="./assets/dexhands_learning_curve.jpg" width="100%"/>
 </div>
 
+*The experiment results of HASAC will be updated soon.*
 
 ## Citation
 
