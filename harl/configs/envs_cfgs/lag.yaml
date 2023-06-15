@@ -6,7 +6,5 @@ task: 2v2/ShootMissile/HierarchyVsBaseline
 #     1v1/NoWeapon/vsBaseline,
 #     1v1/DodgeMissile/vsBaseline,
 #     1v1/DodgeMissile/HierarchyVsBaseline,
-#     1v1/ShootMissile/HierarchyVsBaseline,
-#     1v1/ShootMissile/HierarchyVsBaseline_nolimit
 # )
 # MultipleCombat: 2v2/NoWeapon/vsBaseline, 2v2/ShootMissile/HierarchyVsBaseline

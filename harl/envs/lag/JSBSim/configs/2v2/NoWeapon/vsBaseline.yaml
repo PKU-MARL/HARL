@@ -40,7 +40,7 @@ aircraft_configs: {
   },
   B0100: {
     color: Blue,
-    model: FIM92C,
+    model: f16,
     init_state: {
       ic_h_sl_ft: 20000,
       ic_long_gc_deg: 120.0,
@@ -51,7 +51,7 @@ aircraft_configs: {
   },
   B0200: {
     color: Blue,
-    model: FIM92C,
+    model: f16,
     init_state: {
       ic_h_sl_ft: 20000,
       ic_long_gc_deg: 120.01,

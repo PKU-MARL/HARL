@@ -136,6 +136,6 @@ class OffPolicyBufferEP(OffPolicyBufferBase):
         self.unfinished_index = (
             self.idx - np.arange(self.n_rollout_threads) - 1 + self.cur_size
         ) % self.cur_size
-        self.end_flag = self.dones.copy().squeeze()  # (batch_size)
+        self.end_flag = self.dones.copy().squeeze()  # (batch_size, )
         self.end_flag[self.unfinished_index] = True
 
