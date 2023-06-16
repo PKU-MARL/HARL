@@ -211,6 +211,10 @@ class OffPolicyBaseRunner:
         if self.algo_args["render"]["use_render"]:  # render, not train
             self.render()
             return
+        self.train_episode_rewards = np.zeros(
+            self.algo_args["train"]["n_rollout_threads"]
+        )
+        self.done_episodes_rewards = []
         # warmup
         print("start warmup")
         obs, share_obs, available_actions = self.warmup()
@@ -279,13 +283,25 @@ class OffPolicyBaseRunner:
                 )
                 if self.algo_args["eval"]["use_eval"]:
                     print(
-                        f"Env {self.args['env']} Task {self.task_name} Algo {self.args['algo']} Exp {self.args['exp_name']} Evaluation at step {cur_step}:"
+                        f"Env {self.args['env']} Task {self.task_name} Algo {self.args['algo']} Exp {self.args['exp_name']} Evaluation at step {cur_step} / {self.algo_args['train']['num_env_steps']}:"
                     )
                     self.eval(cur_step)
                 else:
                     print(
-                        f"Env {self.args['env']} Task {self.task_name} Algo {self.args['algo']} Exp {self.args['exp_name']} Step {cur_step}, average step reward in buffer: {self.buffer.get_mean_rewards()}.\n"
+                        f"Env {self.args['env']} Task {self.task_name} Algo {self.args['algo']} Exp {self.args['exp_name']} Step {cur_step} / {self.algo_args['train']['num_env_steps']}, average step reward in buffer: {self.buffer.get_mean_rewards()}.\n"
                     )
+                    if len(self.done_episodes_rewards) > 0:
+                        aver_episode_rewards = np.mean(self.done_episodes_rewards)
+                        print(
+                            "Some episodes done, average episode reward is {}.\n".format(
+                                aver_episode_rewards
+                            )
+                        )
+                        self.log_file.write(
+                            ",".join(map(str, [cur_step, aver_episode_rewards])) + "\n"
+                        )
+                        self.log_file.flush()
+                        self.done_episodes_rewards = []
                 self.save()
 
     def warmup(self):
@@ -349,6 +365,8 @@ class OffPolicyBaseRunner:
         ) = data
 
         dones_env = np.all(dones, axis=1)  # if all agents are done, then env is done
+        reward_env = np.mean(rewards, axis=1).flatten()
+        self.train_episode_rewards += reward_env
 
         # valid_transition denotes whether each transition is valid or not (invalid if corresponding agent is dead)
         # shape: (n_threads, n_agents, 1)
@@ -382,6 +400,8 @@ class OffPolicyBaseRunner:
 
         for i in range(self.algo_args["train"]["n_rollout_threads"]):
             if dones_env[i]:
+                self.done_episodes_rewards.append(self.train_episode_rewards[i])
+                self.train_episode_rewards[i] = 0
                 self.agent_deaths = np.zeros(
                     (self.algo_args["train"]["n_rollout_threads"], self.num_agents, 1)
                 )
