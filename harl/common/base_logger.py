@@ -19,7 +19,9 @@ class BaseLogger:
         self.num_agents = num_agents
         self.writter = writter
         self.run_dir = run_dir
-        self.log_file = open(os.path.join(run_dir, "progress.txt"), "w", encoding='utf-8')
+        self.log_file = open(
+            os.path.join(run_dir, "progress.txt"), "w", encoding="utf-8"
+        )
 
     def get_task_name(self):
         """Get the task name."""
@@ -29,7 +31,9 @@ class BaseLogger:
         """Initialize the logger."""
         self.start = time.time()
         self.episodes = episodes
-        self.train_episode_rewards = np.zeros(self.algo_args["train"]["n_rollout_threads"])
+        self.train_episode_rewards = np.zeros(
+            self.algo_args["train"]["n_rollout_threads"]
+        )
         self.done_episodes_rewards = []
 
     def episode_init(self, episode):
@@ -59,7 +63,9 @@ class BaseLogger:
                 self.done_episodes_rewards.append(self.train_episode_rewards[t])
                 self.train_episode_rewards[t] = 0
 
-    def episode_log(self, actor_train_infos, critic_train_info, actor_buffer, critic_buffer):
+    def episode_log(
+        self, actor_train_infos, critic_train_info, actor_buffer, critic_buffer
+    ):
         """Log information for each episode."""
         self.total_num_steps = (
             self.episode
@@ -92,7 +98,11 @@ class BaseLogger:
 
         if len(self.done_episodes_rewards) > 0:
             aver_episode_rewards = np.mean(self.done_episodes_rewards)
-            print("Some episodes done, average episode reward is {}.\n".format(aver_episode_rewards))
+            print(
+                "Some episodes done, average episode reward is {}.\n".format(
+                    aver_episode_rewards
+                )
+            )
             self.writter.add_scalars(
                 "train_episode_rewards",
                 {"aver_rewards": aver_episode_rewards},
@@ -129,7 +139,9 @@ class BaseLogger:
 
     def eval_thread_done(self, tid):
         """Log evaluation information."""
-        self.eval_episode_rewards[tid].append(np.sum(self.one_episode_rewards[tid], axis=0))
+        self.eval_episode_rewards[tid].append(
+            np.sum(self.one_episode_rewards[tid], axis=0)
+        )
         self.one_episode_rewards[tid] = []
 
     def eval_log(self, eval_episode):

@@ -27,14 +27,18 @@ class OffPolicyBase:
 
     def soft_update(self):
         """Soft update target actor."""
-        for param_target, param in zip(self.target_actor.parameters(), self.actor.parameters()):
+        for param_target, param in zip(
+            self.target_actor.parameters(), self.actor.parameters()
+        ):
             param_target.data.copy_(
                 param_target.data * (1.0 - self.polyak) + param.data * self.polyak
             )
 
     def save(self, save_dir, id):
         """Save the actor and target actor."""
-        torch.save(self.actor.state_dict(), str(save_dir) + "/actor_agent" + str(id) + ".pt")
+        torch.save(
+            self.actor.state_dict(), str(save_dir) + "/actor_agent" + str(id) + ".pt"
+        )
         torch.save(
             self.target_actor.state_dict(),
             str(save_dir) + "/target_actor_agent" + str(id) + ".pt",

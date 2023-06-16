@@ -6,11 +6,18 @@ from harl.utils.models_tools import init, get_init_method
 
 class FixedCategorical(torch.distributions.Categorical):
     """Modify standard PyTorch Categorical."""
+
     def sample(self):
         return super().sample().unsqueeze(-1)
 
     def log_probs(self, actions):
-        return super().log_prob(actions.squeeze(-1)).view(actions.size(0), -1).sum(-1).unsqueeze(-1)
+        return (
+            super()
+            .log_prob(actions.squeeze(-1))
+            .view(actions.size(0), -1)
+            .sum(-1)
+            .unsqueeze(-1)
+        )
 
     def mode(self):
         return self.probs.argmax(dim=-1, keepdim=True)
@@ -18,6 +25,7 @@ class FixedCategorical(torch.distributions.Categorical):
 
 class FixedNormal(torch.distributions.Normal):
     """Modify standard PyTorch Normal."""
+
     def log_probs(self, actions):
         return super().log_prob(actions)
 
@@ -30,7 +38,10 @@ class FixedNormal(torch.distributions.Normal):
 
 class Categorical(nn.Module):
     """A linear layer followed by a Categorical distribution."""
-    def __init__(self, num_inputs, num_outputs, initialization_method="orthogonal_", gain=0.01):
+
+    def __init__(
+        self, num_inputs, num_outputs, initialization_method="orthogonal_", gain=0.01
+    ):
         super(Categorical, self).__init__()
         init_method = get_init_method(initialization_method)
 
@@ -48,6 +59,7 @@ class Categorical(nn.Module):
 
 class DiagGaussian(nn.Module):
     """A linear layer followed by a Diagonal Gaussian distribution."""
+
     def __init__(
         self,
         num_inputs,

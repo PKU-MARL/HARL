@@ -7,6 +7,7 @@ from harl.utils.envs_tools import get_shape_from_obs_space
 
 class DuelingQNet(nn.Module):
     """Dueling Q Network for discrete action space."""
+
     def __init__(self, args, obs_space, output_dim, device=torch.device("cpu")):
         super().__init__()
         self.tpdv = dict(dtype=torch.float32, device=device)

@@ -4,6 +4,7 @@ from harl.utils.models_tools import get_active_func
 
 class PlainMLP(nn.Module):
     """Plain MLP"""
+
     def __init__(self, sizes, activation_func, final_activation_func="identity"):
         super().__init__()
         layers = []

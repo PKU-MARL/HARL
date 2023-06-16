@@ -29,7 +29,9 @@ class OffPolicyMARunner(OffPolicyBaseRunner):
         self.critic.turn_on_grad()
         next_actions = []
         for agent_id in range(self.num_agents):
-            next_actions.append(self.actor[agent_id].get_target_actions(sp_next_obs[agent_id]))
+            next_actions.append(
+                self.actor[agent_id].get_target_actions(sp_next_obs[agent_id])
+            )
         self.critic.train(
             sp_share_obs,
             sp_actions,
@@ -48,7 +50,9 @@ class OffPolicyMARunner(OffPolicyBaseRunner):
                 actions = copy.deepcopy(torch.tensor(sp_actions)).to(self.device)
                 self.actor[agent_id].turn_on_grad()
                 # train this agent
-                actions[agent_id] = self.actor[agent_id].get_actions(sp_obs[agent_id], False)
+                actions[agent_id] = self.actor[agent_id].get_actions(
+                    sp_obs[agent_id], False
+                )
                 actions_list = [a for a in actions]
                 actions_t = torch.cat(actions_list, dim=-1)
                 value_pred = self.critic.get_values(sp_share_obs, actions_t)

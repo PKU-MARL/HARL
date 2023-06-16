@@ -5,9 +5,10 @@ from harl.common.base_logger import BaseLogger
 
 
 class SMACLogger(BaseLogger):
-
     def __init__(self, args, algo_args, env_args, num_agents, writter, run_dir):
-        super(SMACLogger, self).__init__(args, algo_args, env_args, num_agents, writter, run_dir)
+        super(SMACLogger, self).__init__(
+            args, algo_args, env_args, num_agents, writter, run_dir
+        )
         self.win_key = "won"
 
     def get_task_name(self):
@@ -121,7 +122,7 @@ class SMACLogger(BaseLogger):
                     lambda x, y: x * y, list(actor_buffer[agent_id].active_masks.shape)
                 )
             )
-            
+
         critic_train_info["average_step_rewards"] = critic_buffer.get_mean_rewards()
         self.log_train(actor_train_infos, critic_train_info)
 
@@ -146,7 +147,8 @@ class SMACLogger(BaseLogger):
 
     def eval_log(self, eval_episode):
         self.eval_episode_rewards = np.concatenate(
-            [rewards for rewards in self.eval_episode_rewards if rewards])
+            [rewards for rewards in self.eval_episode_rewards if rewards]
+        )
         eval_win_rate = self.eval_battles_won / eval_episode
         eval_env_infos = {
             "eval_average_episode_rewards": self.eval_episode_rewards,

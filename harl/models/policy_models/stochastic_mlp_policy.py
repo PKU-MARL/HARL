@@ -33,7 +33,7 @@ class StochasticMlpPolicy(nn.Module):
             self.hidden_sizes[-1],
             self.initialization_method,
             self.gain,
-            args
+            args,
         )
 
         self.to(device)
@@ -55,7 +55,9 @@ class StochasticMlpPolicy(nn.Module):
 
         actor_features = self.base(obs)
 
-        actions, action_log_probs = self.act(actor_features, available_actions, deterministic)
+        actions, action_log_probs = self.act(
+            actor_features, available_actions, deterministic
+        )
         return actions
 
     def get_logits(self, obs, available_actions=None):

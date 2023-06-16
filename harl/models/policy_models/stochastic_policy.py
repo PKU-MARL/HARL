@@ -17,7 +17,7 @@ class StochasticPolicy(nn.Module):
             args: (dict) arguments containing relevant model information.
             obs_space: (gym.Space) observation space.
             action_space: (gym.Space) action space.
-            device: (torch.device) specifies the device to run on (cpu/gpu).        
+            device: (torch.device) specifies the device to run on (cpu/gpu).
         """
         super(StochasticPolicy, self).__init__()
         self.hidden_sizes = args["hidden_sizes"]
@@ -52,7 +52,9 @@ class StochasticPolicy(nn.Module):
 
         self.to(device)
 
-    def forward(self, obs, rnn_states, masks, available_actions=None, deterministic=False):
+    def forward(
+        self, obs, rnn_states, masks, available_actions=None, deterministic=False
+    ):
         """Compute actions from the given inputs.
         Args:
             obs: (np.ndarray / torch.Tensor) observation inputs into network.
@@ -77,7 +79,9 @@ class StochasticPolicy(nn.Module):
         if self.use_naive_recurrent_policy or self.use_recurrent_policy:
             actor_features, rnn_states = self.rnn(actor_features, rnn_states, masks)
 
-        actions, action_log_probs = self.act(actor_features, available_actions, deterministic)
+        actions, action_log_probs = self.act(
+            actor_features, available_actions, deterministic
+        )
 
         return actions, action_log_probs, rnn_states
 

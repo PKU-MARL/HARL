@@ -16,13 +16,19 @@ class OffPolicyBufferEP(OffPolicyBufferBase):
             obs_spaces: (gym.Space or list) observation spaces
             act_spaces: (gym.Space) action spaces
         """
-        super(OffPolicyBufferEP, self).__init__(args, share_obs_space, num_agents, obs_spaces, act_spaces)
+        super(OffPolicyBufferEP, self).__init__(
+            args, share_obs_space, num_agents, obs_spaces, act_spaces
+        )
 
         # Buffer for share observations
-        self.share_obs = np.zeros((self.buffer_size, *self.share_obs_shape), dtype=np.float32)
+        self.share_obs = np.zeros(
+            (self.buffer_size, *self.share_obs_shape), dtype=np.float32
+        )
 
         # Buffer for next share observations
-        self.next_share_obs = np.zeros((self.buffer_size, *self.share_obs_shape), dtype=np.float32)
+        self.next_share_obs = np.zeros(
+            (self.buffer_size, *self.share_obs_shape), dtype=np.float32
+        )
 
         # Buffer for rewards received by agents at each timestep
         self.rewards = np.zeros((self.buffer_size, 1), dtype=np.float32)
@@ -48,20 +54,30 @@ class OffPolicyBufferEP(OffPolicyBufferBase):
             sp_gamma: (batch_size, 1)
         """
         self.update_end_flag()  # update the current end flag
-        indice = torch.randperm(self.cur_size).numpy()[: self.batch_size]  # sample indice, shape: (batch_size, )
+        indice = torch.randperm(self.cur_size).numpy()[
+            : self.batch_size
+        ]  # sample indice, shape: (batch_size, )
 
         # get data at the beginning indice
         sp_share_obs = self.share_obs[indice]
-        sp_obs = np.array([self.obs[agent_id][indice] for agent_id in range(self.num_agents)])
+        sp_obs = np.array(
+            [self.obs[agent_id][indice] for agent_id in range(self.num_agents)]
+        )
         sp_actions = np.array(
             [self.actions[agent_id][indice] for agent_id in range(self.num_agents)]
         )
         sp_valid_transitions = np.array(
-            [self.valid_transitions[agent_id][indice] for agent_id in range(self.num_agents)]
+            [
+                self.valid_transitions[agent_id][indice]
+                for agent_id in range(self.num_agents)
+            ]
         )
-        if self.act_spaces[0].__class__.__name__ == 'Discrete':
+        if self.act_spaces[0].__class__.__name__ == "Discrete":
             sp_available_actions = np.array(
-                [self.available_actions[agent_id][indice] for agent_id in range(self.num_agents)]
+                [
+                    self.available_actions[agent_id][indice]
+                    for agent_id in range(self.num_agents)
+                ]
             )
 
         # compute the indices along n steps
@@ -74,11 +90,17 @@ class OffPolicyBufferEP(OffPolicyBufferBase):
         sp_term = self.terms[indices[-1]]
         sp_next_share_obs = self.next_share_obs[indices[-1]]
         sp_next_obs = np.array(
-            [self.next_obs[agent_id][indices[-1]] for agent_id in range(self.num_agents)]
+            [
+                self.next_obs[agent_id][indices[-1]]
+                for agent_id in range(self.num_agents)
+            ]
         )
-        if self.act_spaces[0].__class__.__name__ == 'Discrete':
+        if self.act_spaces[0].__class__.__name__ == "Discrete":
             sp_next_available_actions = np.array(
-                [self.next_available_actions[agent_id][indices[-1]] for agent_id in range(self.num_agents)]
+                [
+                    self.next_available_actions[agent_id][indices[-1]]
+                    for agent_id in range(self.num_agents)
+                ]
             )
 
         # compute accumulated rewards and the corresponding gamma
@@ -94,7 +116,7 @@ class OffPolicyBufferEP(OffPolicyBufferBase):
             sp_reward = self.rewards[now] + self.gamma * sp_reward
         sp_gamma = gamma_buffer[gammas].reshape(self.batch_size, 1)
 
-        if self.act_spaces[0].__class__.__name__ == 'Discrete':
+        if self.act_spaces[0].__class__.__name__ == "Discrete":
             return (
                 sp_share_obs,
                 sp_obs,
@@ -107,7 +129,7 @@ class OffPolicyBufferEP(OffPolicyBufferBase):
                 sp_next_share_obs,
                 sp_next_obs,
                 sp_next_available_actions,
-                sp_gamma
+                sp_gamma,
             )
         else:
             return (
@@ -127,7 +149,9 @@ class OffPolicyBufferEP(OffPolicyBufferBase):
 
     def next(self, indices):
         """Get next indices"""
-        return (indices + (1 - self.end_flag[indices]) * self.n_rollout_threads) % self.buffer_size
+        return (
+            indices + (1 - self.end_flag[indices]) * self.n_rollout_threads
+        ) % self.buffer_size
 
     def update_end_flag(self):
         """Update current end flag for computing n-step return.
@@ -138,4 +162,3 @@ class OffPolicyBufferEP(OffPolicyBufferBase):
         ) % self.cur_size
         self.end_flag = self.dones.copy().squeeze()  # (batch_size, )
         self.end_flag[self.unfinished_index] = True
-

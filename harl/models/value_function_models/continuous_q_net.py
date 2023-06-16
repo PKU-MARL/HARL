@@ -9,9 +9,9 @@ def get_combined_dim(cent_obs_feature_dim, act_spaces):
     """Get the combined dimension of central observation and individual actions."""
     combined_dim = cent_obs_feature_dim
     for space in act_spaces:
-        if space.__class__.__name__ == 'Box':
+        if space.__class__.__name__ == "Box":
             combined_dim += space.shape[0]
-        elif space.__class__.__name__ == 'Discrete':
+        elif space.__class__.__name__ == "Discrete":
             combined_dim += space.n
         else:
             action_dims = space.nvec

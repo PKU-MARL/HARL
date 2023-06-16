@@ -37,10 +37,14 @@ class SquashedGaussianPolicy(nn.Module):
             self.feature_extractor = None
             feature_dim = obs_shape[0]
         act_dim = action_space.shape[0]
-        self.net = PlainMLP([feature_dim] + list(hidden_sizes), activation_func, final_activation_func)
+        self.net = PlainMLP(
+            [feature_dim] + list(hidden_sizes), activation_func, final_activation_func
+        )
         self.mu_layer = nn.Linear(hidden_sizes[-1], act_dim)
         self.log_std_layer = nn.Linear(hidden_sizes[-1], act_dim)
-        self.act_limit = action_space.high[0]  # action limit for clamping (assumes all dimensions share the same bound)
+        self.act_limit = action_space.high[
+            0
+        ]  # action limit for clamping (assumes all dimensions share the same bound)
         self.to(device)
 
     def forward(self, obs, stochastic=True, with_logprob=True):
@@ -69,7 +73,9 @@ class SquashedGaussianPolicy(nn.Module):
             # of where it comes from, check out the original SAC paper (arXiv 1801.01290)
             # and look in appendix C. This is a more numerically-stable equivalent to Eq 21.
             logp_pi = pi_distribution.log_prob(pi_action).sum(axis=-1, keepdim=True)
-            logp_pi -= (2 * (np.log(2) - pi_action - F.softplus(-2 * pi_action))).sum(axis=1, keepdim=True)
+            logp_pi -= (2 * (np.log(2) - pi_action - F.softplus(-2 * pi_action))).sum(
+                axis=1, keepdim=True
+            )
         else:
             logp_pi = None
 

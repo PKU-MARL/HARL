@@ -15,7 +15,15 @@ class ContinuousQCritic:
     include discrete action space in the future.
     """
 
-    def __init__(self, args, share_obs_space, act_space, num_agents, state_type, device=torch.device("cpu")):
+    def __init__(
+        self,
+        args,
+        share_obs_space,
+        act_space,
+        num_agents,
+        state_type,
+        device=torch.device("cpu"),
+    ):
         """Initialize the critic."""
         self.tpdv = dict(dtype=torch.float32, device=device)
         self.act_space = act_space
@@ -29,7 +37,9 @@ class ContinuousQCritic:
         self.critic_lr = args["critic_lr"]
         self.polyak = args["polyak"]
         self.use_proper_time_limits = args["use_proper_time_limits"]
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=self.critic_lr)
+        self.critic_optimizer = torch.optim.Adam(
+            self.critic.parameters(), lr=self.critic_lr
+        )
         self.turn_off_grad()
 
     def lr_decay(self, step, steps):
@@ -42,7 +52,9 @@ class ContinuousQCritic:
 
     def soft_update(self):
         """Soft update the target network."""
-        for param_target, param in zip(self.target_critic.parameters(), self.critic.parameters()):
+        for param_target, param in zip(
+            self.target_critic.parameters(), self.critic.parameters()
+        ):
             param_target.data.copy_(
                 param_target.data * (1.0 - self.polyak) + param.data * self.polyak
             )
@@ -115,7 +127,9 @@ class ContinuousQCritic:
         """Restore the model."""
         critic_state_dict = torch.load(str(model_dir) + "/critic_agent" + ".pt")
         self.critic.load_state_dict(critic_state_dict)
-        target_critic_state_dict = torch.load(str(model_dir) + "/target_critic_agent" + ".pt")
+        target_critic_state_dict = torch.load(
+            str(model_dir) + "/target_critic_agent" + ".pt"
+        )
         self.target_critic.load_state_dict(target_critic_state_dict)
 
     def turn_on_grad(self):

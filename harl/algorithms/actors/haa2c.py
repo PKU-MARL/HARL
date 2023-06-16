@@ -71,10 +71,13 @@ class HAA2C(OnPolicyBase):
 
         if self.use_policy_active_masks:
             policy_action_loss = (
-                -torch.sum(factor_batch * surr, dim=-1, keepdim=True) * active_masks_batch
+                -torch.sum(factor_batch * surr, dim=-1, keepdim=True)
+                * active_masks_batch
             ).sum() / active_masks_batch.sum()
         else:
-            policy_action_loss = -torch.sum(factor_batch * surr, dim=-1, keepdim=True).mean()
+            policy_action_loss = -torch.sum(
+                factor_batch * surr, dim=-1, keepdim=True
+            ).mean()
 
         policy_loss = policy_action_loss
 
@@ -83,7 +86,9 @@ class HAA2C(OnPolicyBase):
         (policy_loss - dist_entropy * self.entropy_coef).backward()  # add entropy term
 
         if self.use_max_grad_norm:
-            actor_grad_norm = nn.utils.clip_grad_norm_(self.actor.parameters(), self.max_grad_norm)
+            actor_grad_norm = nn.utils.clip_grad_norm_(
+                self.actor.parameters(), self.max_grad_norm
+            )
         else:
             actor_grad_norm = get_grad_norm(self.actor.parameters())
 
@@ -131,7 +136,9 @@ class HAA2C(OnPolicyBase):
                 )
 
             for sample in data_generator:
-                policy_loss, dist_entropy, actor_grad_norm, imp_weights = self.update(sample)
+                policy_loss, dist_entropy, actor_grad_norm, imp_weights = self.update(
+                    sample
+                )
 
                 train_info["policy_loss"] += policy_loss.item()
                 train_info["dist_entropy"] += dist_entropy.item()

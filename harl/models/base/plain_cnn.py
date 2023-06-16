@@ -5,7 +5,10 @@ from harl.models.base.flatten import Flatten
 
 class PlainCNN(nn.Module):
     """Plain CNN"""
-    def __init__(self, obs_shape, hidden_size, activation_func, kernel_size=3, stride=1):
+
+    def __init__(
+        self, obs_shape, hidden_size, activation_func, kernel_size=3, stride=1
+    ):
         super().__init__()
         input_channel = obs_shape[0]
         input_width = obs_shape[1]

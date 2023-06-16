@@ -14,11 +14,19 @@ def onehot_from_logits(logits, eps=0.0):
     if eps == 0.0:
         return argmax_acs
     # get random actions in one-hot form
-    rand_acs = Variable(torch.eye(logits.shape[1])[[np.random.choice(
-        range(logits.shape[1]), size=logits.shape[0])]], requires_grad=False)
+    rand_acs = Variable(
+        torch.eye(logits.shape[1])[
+            [np.random.choice(range(logits.shape[1]), size=logits.shape[0])]
+        ],
+        requires_grad=False,
+    )
     # chooses between best and random actions using epsilon greedy
-    return torch.stack([argmax_acs[i] if r > eps else rand_acs[i] for i, r in
-                        enumerate(torch.rand(logits.shape[0]))])
+    return torch.stack(
+        [
+            argmax_acs[i] if r > eps else rand_acs[i]
+            for i, r in enumerate(torch.rand(logits.shape[0]))
+        ]
+    )
 
 
 def sample_gumbel(shape, device, eps=1e-20, tens_type=torch.FloatTensor):
@@ -28,7 +36,7 @@ def sample_gumbel(shape, device, eps=1e-20, tens_type=torch.FloatTensor):
 
 
 def gumbel_softmax_sample(logits, temperature, device):
-    """ Draw a sample from the Gumbel-Softmax distribution"""
+    """Draw a sample from the Gumbel-Softmax distribution"""
     y = logits + sample_gumbel(logits.shape, tens_type=type(logits.data), device=device)
     return F.softmax(y / temperature, dim=1)
 

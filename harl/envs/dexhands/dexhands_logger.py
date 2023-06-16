@@ -4,11 +4,12 @@ from harl.common.base_logger import BaseLogger
 
 
 class DexHandsLogger(BaseLogger):
-
     def get_task_name(self):
         return self.env_args["task"]
 
-    def episode_log(self, actor_train_infos, critic_train_info, actor_buffer, critic_buffer):
+    def episode_log(
+        self, actor_train_infos, critic_train_info, actor_buffer, critic_buffer
+    ):
         """Log information for each episode."""
         self.total_num_steps = (
             self.episode
@@ -41,7 +42,11 @@ class DexHandsLogger(BaseLogger):
 
         if len(self.done_episodes_rewards) > 0:
             aver_episode_rewards = np.mean(self.done_episodes_rewards)
-            print("Some episodes done, average episode reward is {}.\n".format(aver_episode_rewards))
+            print(
+                "Some episodes done, average episode reward is {}.\n".format(
+                    aver_episode_rewards
+                )
+            )
             self.writter.add_scalars(
                 "train_episode_rewards",
                 {"aver_rewards": aver_episode_rewards},

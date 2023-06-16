@@ -36,7 +36,9 @@ class HAD3QN(OffPolicyBase):
         """
         obs = check(obs).to(**self.tpdv)
         if np.random.random() < self.epsilon and epsilon_greedy:
-            actions = torch.randint(low=0, high=self.action_dim, size=(*obs.shape[:-1], 1))
+            actions = torch.randint(
+                low=0, high=self.action_dim, size=(*obs.shape[:-1], 1)
+            )
         else:
             actions = self.actor(obs).argmax(dim=-1, keepdim=True)
         return actions

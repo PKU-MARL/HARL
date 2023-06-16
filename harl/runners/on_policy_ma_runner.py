@@ -13,11 +13,13 @@ class OnPolicyMARunner(OnPolicyBaseRunner):
 
         # compute advantages
         if self.value_normalizer is not None:
-            advantages = self.critic_buffer.returns[:-1] - self.value_normalizer.denormalize(
-                self.critic_buffer.value_preds[:-1]
-            )
+            advantages = self.critic_buffer.returns[
+                :-1
+            ] - self.value_normalizer.denormalize(self.critic_buffer.value_preds[:-1])
         else:
-            advantages = self.critic_buffer.returns[:-1] - self.critic_buffer.value_preds[:-1]
+            advantages = (
+                self.critic_buffer.returns[:-1] - self.critic_buffer.value_preds[:-1]
+            )
 
         # normalize advantages for FP
         if self.state_type == "FP":
@@ -46,7 +48,9 @@ class OnPolicyMARunner(OnPolicyBaseRunner):
                     )
                 elif self.state_type == "FP":
                     actor_train_info = self.actor[agent_id].train(
-                        self.actor_buffer[agent_id], advantages[:, :, agent_id].copy(), "FP"
+                        self.actor_buffer[agent_id],
+                        advantages[:, :, agent_id].copy(),
+                        "FP",
                     )
                 actor_train_infos.append(actor_train_info)
 

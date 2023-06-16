@@ -4,7 +4,6 @@ from harl.utils.envs_tools import get_shape_from_obs_space, get_shape_from_act_s
 
 
 class OffPolicyBufferBase:
-
     def __init__(self, args, share_obs_space, num_agents, obs_spaces, act_spaces):
         """Initialize off-policy buffer.
         Args:
@@ -41,7 +40,9 @@ class OffPolicyBufferBase:
         self.obs = []
         self.next_obs = []
         for agent_id in range(num_agents):
-            self.obs.append(np.zeros((self.buffer_size, *obs_shapes[agent_id]), dtype=np.float32))
+            self.obs.append(
+                np.zeros((self.buffer_size, *obs_shapes[agent_id]), dtype=np.float32)
+            )
             self.next_obs.append(
                 np.zeros((self.buffer_size, *obs_shapes[agent_id]), dtype=np.float32)
             )
@@ -61,11 +62,17 @@ class OffPolicyBufferBase:
             self.actions.append(
                 np.zeros((self.buffer_size, act_shapes[agent_id]), dtype=np.float32)
             )
-            if act_spaces[agent_id].__class__.__name__ == 'Discrete':
-                self.available_actions.append(np.zeros(
-                    (self.buffer_size, act_spaces[agent_id].n), dtype=np.float32))
-                self.next_available_actions.append(np.zeros(
-                    (self.buffer_size, act_spaces[agent_id].n), dtype=np.float32))
+            if act_spaces[agent_id].__class__.__name__ == "Discrete":
+                self.available_actions.append(
+                    np.zeros(
+                        (self.buffer_size, act_spaces[agent_id].n), dtype=np.float32
+                    )
+                )
+                self.next_available_actions.append(
+                    np.zeros(
+                        (self.buffer_size, act_spaces[agent_id].n), dtype=np.float32
+                    )
+                )
 
     def insert(self, data):
         """Insert data into buffer.
@@ -83,7 +90,19 @@ class OffPolicyBufferBase:
             next_obs: [(n_rollout_threads, *obs_shapes[agent_id]) for agent_id in range(num_agents)]
             next_available_actions: [(n_rollout_threads, *act_shapes[agent_id]) for agent_id in range(num_agents)]
         """
-        share_obs, obs, actions, available_actions, reward, done, valid_transitions, term, next_share_obs, next_obs, next_available_actions = data
+        (
+            share_obs,
+            obs,
+            actions,
+            available_actions,
+            reward,
+            done,
+            valid_transitions,
+            term,
+            next_share_obs,
+            next_obs,
+            next_available_actions,
+        ) = data
         length = share_obs.shape[0]
         if self.idx + length <= self.buffer_size:  # no overflow
             s = self.idx
@@ -96,10 +115,16 @@ class OffPolicyBufferBase:
             for agent_id in range(self.num_agents):
                 self.obs[agent_id][s:e] = obs[agent_id].copy()
                 self.actions[agent_id][s:e] = actions[agent_id].copy()
-                self.valid_transitions[agent_id][s:e] = valid_transitions[agent_id].copy()
-                if self.act_spaces[agent_id].__class__.__name__ == 'Discrete':
-                    self.available_actions[agent_id][s:e] = available_actions[agent_id].copy()
-                    self.next_available_actions[agent_id][s:e] = next_available_actions[agent_id].copy()
+                self.valid_transitions[agent_id][s:e] = valid_transitions[
+                    agent_id
+                ].copy()
+                if self.act_spaces[agent_id].__class__.__name__ == "Discrete":
+                    self.available_actions[agent_id][s:e] = available_actions[
+                        agent_id
+                    ].copy()
+                    self.next_available_actions[agent_id][s:e] = next_available_actions[
+                        agent_id
+                    ].copy()
                 self.next_obs[agent_id][s:e] = next_obs[agent_id].copy()
         else:  # overflow
             len1 = self.buffer_size - self.idx  # length of first segment
@@ -116,10 +141,16 @@ class OffPolicyBufferBase:
             for agent_id in range(self.num_agents):
                 self.obs[agent_id][s:e] = obs[agent_id][0:len1].copy()
                 self.actions[agent_id][s:e] = actions[agent_id][0:len1].copy()
-                self.valid_transitions[agent_id][s:e] = valid_transitions[agent_id][0:len1].copy()
-                if self.act_spaces[agent_id].__class__.__name__ == 'Discrete':
-                    self.available_actions[agent_id][s:e] = available_actions[agent_id][0:len1].copy()
-                    self.next_available_actions[agent_id][s:e] = next_available_actions[agent_id][0:len1].copy()
+                self.valid_transitions[agent_id][s:e] = valid_transitions[agent_id][
+                    0:len1
+                ].copy()
+                if self.act_spaces[agent_id].__class__.__name__ == "Discrete":
+                    self.available_actions[agent_id][s:e] = available_actions[agent_id][
+                        0:len1
+                    ].copy()
+                    self.next_available_actions[agent_id][s:e] = next_available_actions[
+                        agent_id
+                    ][0:len1].copy()
                 self.next_obs[agent_id][s:e] = next_obs[agent_id][0:len1].copy()
 
             # insert second segment
@@ -133,14 +164,22 @@ class OffPolicyBufferBase:
             for agent_id in range(self.num_agents):
                 self.obs[agent_id][s:e] = obs[agent_id][len1:length].copy()
                 self.actions[agent_id][s:e] = actions[agent_id][len1:length].copy()
-                self.valid_transitions[agent_id][s:e] = valid_transitions[agent_id][len1:length].copy()
-                if self.act_spaces[agent_id].__class__.__name__ == 'Discrete':
-                    self.available_actions[agent_id][s:e] = available_actions[agent_id][len1:length].copy()
-                    self.next_available_actions[agent_id][s:e] = next_available_actions[agent_id][len1:length].copy()
+                self.valid_transitions[agent_id][s:e] = valid_transitions[agent_id][
+                    len1:length
+                ].copy()
+                if self.act_spaces[agent_id].__class__.__name__ == "Discrete":
+                    self.available_actions[agent_id][s:e] = available_actions[agent_id][
+                        len1:length
+                    ].copy()
+                    self.next_available_actions[agent_id][s:e] = next_available_actions[
+                        agent_id
+                    ][len1:length].copy()
                 self.next_obs[agent_id][s:e] = next_obs[agent_id][len1:length].copy()
-        
+
         self.idx = (self.idx + length) % self.buffer_size  # update index
-        self.cur_size = min(self.cur_size + length, self.buffer_size)  # update current size
+        self.cur_size = min(
+            self.cur_size + length, self.buffer_size
+        )  # update current size
 
     def sample(self):
         pass

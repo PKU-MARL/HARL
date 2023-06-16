@@ -42,7 +42,7 @@ def update_model(model, new_params):
         new_param = new_param.view(params.size())
         params.data.copy_(new_param)
         index += params_length
-        
+
 
 def kl_approx(p, q):
     """KL divergence between two distributions."""
@@ -50,12 +50,15 @@ def kl_approx(p, q):
     kl = r - 1 - q + p
     return kl
 
+
 def _kl_normal_normal(p, q):
     """KL divergence between two normal distributions.
     adapted from https://pytorch.org/docs/stable/_modules/torch/distributions/kl.html#kl_divergence
     """
     var_ratio = (p.scale.to(torch.float64) / q.scale.to(torch.float64)).pow(2)
-    t1 = ((p.loc.to(torch.float64) - q.loc.to(torch.float64)) / q.scale.to(torch.float64)).pow(2)
+    t1 = (
+        (p.loc.to(torch.float64) - q.loc.to(torch.float64)) / q.scale.to(torch.float64)
+    ).pow(2)
     return 0.5 * (var_ratio + t1 - 1 - var_ratio.log())
 
 
@@ -143,9 +146,13 @@ def fisher_vector_product(
             old_actor=actor,
         )
         kl = kl.mean()
-        kl_grad = torch.autograd.grad(kl, actor.parameters(), create_graph=True, allow_unused=True)
+        kl_grad = torch.autograd.grad(
+            kl, actor.parameters(), create_graph=True, allow_unused=True
+        )
         kl_grad = flat_grad(kl_grad)  # check kl_grad == 0
         kl_grad_p = (kl_grad * p).sum()
-        kl_hessian_p = torch.autograd.grad(kl_grad_p, actor.parameters(), allow_unused=True)
+        kl_hessian_p = torch.autograd.grad(
+            kl_grad_p, actor.parameters(), allow_unused=True
+        )
         kl_hessian_p = flat_hessian(kl_hessian_p)
         return kl_hessian_p + 0.1 * p

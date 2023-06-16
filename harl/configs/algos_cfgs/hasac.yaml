@@ -95,4 +95,3 @@ algo:
 logger:
   # logging directory
   log_dir: "./results"
-

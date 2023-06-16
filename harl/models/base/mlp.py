@@ -43,6 +43,7 @@ class MLPLayer(nn.Module):
 
 class MLPBase(nn.Module):
     """A MLP base module."""
+
     def __init__(self, args, obs_shape):
         super(MLPBase, self).__init__()
 

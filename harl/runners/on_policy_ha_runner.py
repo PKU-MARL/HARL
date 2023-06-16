@@ -15,8 +15,8 @@ class OnPolicyHARunner(OnPolicyBaseRunner):
         # factor is used for considering updates made by previous agents
         factor = np.ones(
             (
-                self.algo_args['train']['episode_length'],
-                self.algo_args['train']['n_rollout_threads'],
+                self.algo_args["train"]["episode_length"],
+                self.algo_args["train"]["n_rollout_threads"],
                 1,
             ),
             dtype=np.float32,
@@ -24,11 +24,13 @@ class OnPolicyHARunner(OnPolicyBaseRunner):
 
         # compute advantages
         if self.value_normalizer is not None:
-            advantages = self.critic_buffer.returns[:-1] - self.value_normalizer.denormalize(
-                self.critic_buffer.value_preds[:-1]
-            )
+            advantages = self.critic_buffer.returns[
+                :-1
+            ] - self.value_normalizer.denormalize(self.critic_buffer.value_preds[:-1])
         else:
-            advantages = self.critic_buffer.returns[:-1] - self.critic_buffer.value_preds[:-1]
+            advantages = (
+                self.critic_buffer.returns[:-1] - self.critic_buffer.value_preds[:-1]
+            )
 
         # normalize advantages for FP
         if self.state_type == "FP":
@@ -47,7 +49,9 @@ class OnPolicyHARunner(OnPolicyBaseRunner):
         else:
             agent_order = list(torch.randperm(self.num_agents).numpy())
         for agent_id in agent_order:
-            self.actor_buffer[agent_id].update_factor(factor)  # current actor save factor
+            self.actor_buffer[agent_id].update_factor(
+                factor
+            )  # current actor save factor
 
             # the following reshaping combines the first two dimensions (i.e. episode_length and n_rollout_threads) to form a batch
             available_actions = (
@@ -113,8 +117,8 @@ class OnPolicyHARunner(OnPolicyBaseRunner):
                 getattr(torch, self.action_aggregation)(
                     torch.exp(new_actions_logprob - old_actions_logprob), dim=-1
                 ).reshape(
-                    self.algo_args['train']['episode_length'],
-                    self.algo_args['train']['n_rollout_threads'],
+                    self.algo_args["train"]["episode_length"],
+                    self.algo_args["train"]["n_rollout_threads"],
                     1,
                 )
             )

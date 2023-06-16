@@ -163,7 +163,6 @@ class ShareVecEnv(ABC):
         return self.viewer
 
 
-
 def shareworker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
     env = env_fn_wrapper.x()
@@ -172,13 +171,17 @@ def shareworker(remote, parent_remote, env_fn_wrapper):
         if cmd == "step":
             ob, s_ob, reward, done, info, available_actions = env.step(data)
             if "bool" in done.__class__.__name__:  # done is a bool
-                if done:  # if done, save the original obs, state, and available actions in info, and then reset
+                if (
+                    done
+                ):  # if done, save the original obs, state, and available actions in info, and then reset
                     info[0]["original_obs"] = copy.deepcopy(ob)
                     info[0]["original_state"] = copy.deepcopy(s_ob)
                     info[0]["original_avail_actions"] = copy.deepcopy(available_actions)
                     ob, s_ob, available_actions = env.reset()
             else:
-                if np.all(done):  # if done, save the original obs, state, and available actions in info, and then reset
+                if np.all(
+                    done
+                ):  # if done, save the original obs, state, and available actions in info, and then reset
                     info[0]["original_obs"] = copy.deepcopy(ob)
                     info[0]["original_state"] = copy.deepcopy(s_ob)
                     info[0]["original_avail_actions"] = copy.deepcopy(available_actions)
@@ -321,7 +324,9 @@ class ShareDummyVecEnv(ShareVecEnv):
 
         for i, done in enumerate(dones):
             if "bool" in done.__class__.__name__:  # done is a bool
-                if done:  # if done, save the original obs, state, and available actions in info, and then reset
+                if (
+                    done
+                ):  # if done, save the original obs, state, and available actions in info, and then reset
                     infos[i][0]["original_obs"] = copy.deepcopy(obs[i])
                     infos[i][0]["original_state"] = copy.deepcopy(share_obs[i])
                     infos[i][0]["original_avail_actions"] = copy.deepcopy(
@@ -329,7 +334,9 @@ class ShareDummyVecEnv(ShareVecEnv):
                     )
                     obs[i], share_obs[i], available_actions[i] = self.envs[i].reset()
             else:
-                if np.all(done):  # if done, save the original obs, state, and available actions in info, and then reset
+                if np.all(
+                    done
+                ):  # if done, save the original obs, state, and available actions in info, and then reset
                     infos[i][0]["original_obs"] = copy.deepcopy(obs[i])
                     infos[i][0]["original_state"] = copy.deepcopy(share_obs[i])
                     infos[i][0]["original_avail_actions"] = copy.deepcopy(

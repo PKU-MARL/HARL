@@ -36,7 +36,9 @@ class ACTLayer(nn.Module):
             action_dims = action_space.nvec
             action_outs = []
             for action_dim in action_dims:
-                action_outs.append(Categorical(inputs_dim, action_dim, initialization_method, gain))
+                action_outs.append(
+                    Categorical(inputs_dim, action_dim, initialization_method, gain)
+                )
             self.action_outs = nn.ModuleList(action_outs)
 
     def forward(self, x, available_actions=None, deterministic=False):
@@ -65,7 +67,9 @@ class ACTLayer(nn.Module):
                 actions.append(action)
                 action_log_probs.append(action_log_prob)
             actions = torch.cat(actions, dim=-1)
-            action_log_probs = torch.cat(action_log_probs, dim=-1).sum(dim=-1, keepdim=True)
+            action_log_probs = torch.cat(action_log_probs, dim=-1).sum(
+                dim=-1, keepdim=True
+            )
         else:
             action_distribution = self.action_out(x, available_actions)
             actions = (
@@ -116,13 +120,24 @@ class ACTLayer(nn.Module):
             dist_entropy = []
             for action_out, act in zip(self.action_outs, action):
                 action_distribution = action_out(x)
-                action_log_probs.append(action_distribution.log_probs(act.unsqueeze(-1)))
+                action_log_probs.append(
+                    action_distribution.log_probs(act.unsqueeze(-1))
+                )
                 if active_masks is not None:
-                    dist_entropy.append((action_distribution.entropy() * active_masks) / active_masks.sum())
+                    dist_entropy.append(
+                        (action_distribution.entropy() * active_masks)
+                        / active_masks.sum()
+                    )
                 else:
-                    dist_entropy.append(action_distribution.entropy() / action_log_probs[-1].size(0))
-            action_log_probs = torch.cat(action_log_probs, dim=-1).sum(dim=-1, keepdim=True)
-            dist_entropy = torch.cat(dist_entropy, dim=-1).sum(dim=-1, keepdim=True).mean()
+                    dist_entropy.append(
+                        action_distribution.entropy() / action_log_probs[-1].size(0)
+                    )
+            action_log_probs = torch.cat(action_log_probs, dim=-1).sum(
+                dim=-1, keepdim=True
+            )
+            dist_entropy = (
+                torch.cat(dist_entropy, dim=-1).sum(dim=-1, keepdim=True).mean()
+            )
             return action_log_probs, dist_entropy, None
         else:
             action_distribution = self.action_out(x, available_actions)

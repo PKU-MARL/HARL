@@ -1,6 +1,10 @@
 import numpy as np
 
-from harl.envs.lag.JSBSim.envs import SingleCombatEnv, SingleControlEnv, MultipleCombatEnv
+from harl.envs.lag.JSBSim.envs import (
+    SingleCombatEnv,
+    SingleControlEnv,
+    MultipleCombatEnv,
+)
 import torch
 
 
@@ -44,7 +48,7 @@ class LAGEnv:
         pass
 
     def render(self):
-        self.env.render(mode='txt', filepath='render.txt.acmi')
+        self.env.render(mode="txt", filepath="render.txt.acmi")
 
     def close(self):
         self.env.close()
@@ -57,8 +61,7 @@ class LAGEnv:
         elif env_args["scenario"] == "MultipleCombat":
             env = MultipleCombatEnv(env_args["task"])
         else:
-            print("Can not support the " +
-                  env_args["scenario"] + "environment.")
+            print("Can not support the " + env_args["scenario"] + "environment.")
             raise NotImplementedError
         return env
 

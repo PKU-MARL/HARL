@@ -67,6 +67,7 @@ class CNNLayer(nn.Module):
 
 class CNNBase(nn.Module):
     """A CNN base module for actor and critic."""
+
     def __init__(self, args, obs_shape):
         super(CNNBase, self).__init__()
 

@@ -86,12 +86,18 @@ class OnPolicyBase:
             active_masks: (np.ndarray / torch.Tensor) denotes whether an agent is active or dead.
         """
 
-        (action_log_probs, dist_entropy, action_distribution,) = self.actor.evaluate_actions(
+        (
+            action_log_probs,
+            dist_entropy,
+            action_distribution,
+        ) = self.actor.evaluate_actions(
             obs, rnn_states_actor, action, masks, available_actions, active_masks
         )
         return action_log_probs, dist_entropy, action_distribution
 
-    def act(self, obs, rnn_states_actor, masks, available_actions=None, deterministic=False):
+    def act(
+        self, obs, rnn_states_actor, masks, available_actions=None, deterministic=False
+    ):
         """Compute actions using the given inputs.
         Args:
             obs: (np.ndarray) local agent inputs to the actor.

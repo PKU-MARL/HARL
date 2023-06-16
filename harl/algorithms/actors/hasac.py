@@ -53,17 +53,23 @@ class HASAC(OffPolicyBase):
         """
         obs = check(obs).to(**self.tpdv)
         if self.action_type == "Box":
-            actions, logp_actions = self.actor(obs, stochastic=stochastic, with_logprob=True)
+            actions, logp_actions = self.actor(
+                obs, stochastic=stochastic, with_logprob=True
+            )
         elif self.action_type == "Discrete":
             logits = self.actor.get_logits(obs, available_actions)
-            actions = gumbel_softmax(logits, hard=True, device=self.device)  # onehot actions
+            actions = gumbel_softmax(
+                logits, hard=True, device=self.device
+            )  # onehot actions
             logp_actions = torch.sum(actions * logits, dim=-1, keepdim=True)
         elif self.action_type == "MultiDiscrete":
             logits = self.actor.get_logits(obs, available_actions)
             actions = []
             logp_actions = []
             for logit in logits:
-                action = gumbel_softmax(logit, hard=True, device=self.device)  # onehot actions
+                action = gumbel_softmax(
+                    logit, hard=True, device=self.device
+                )  # onehot actions
                 logp_action = torch.sum(action * logit, dim=-1, keepdim=True)
                 actions.append(action)
                 logp_actions.append(logp_action)
@@ -73,7 +79,9 @@ class HASAC(OffPolicyBase):
 
     def save(self, save_dir, id):
         """Save the actor."""
-        torch.save(self.actor.state_dict(), str(save_dir) + "/actor_agent" + str(id) + ".pt")
+        torch.save(
+            self.actor.state_dict(), str(save_dir) + "/actor_agent" + str(id) + ".pt"
+        )
 
     def restore(self, model_dir, id):
         """Restore the actor."""

@@ -16,7 +16,15 @@ class TwinContinuousQCritic:
     include discrete action space in the future.
     """
 
-    def __init__(self, args, share_obs_space, act_space, num_agents, state_type, device=torch.device("cpu")):
+    def __init__(
+        self,
+        args,
+        share_obs_space,
+        act_space,
+        num_agents,
+        state_type,
+        device=torch.device("cpu"),
+    ):
         """Initialize the critic."""
         self.tpdv = dict(dtype=torch.float32, device=device)
         self.act_space = act_space
@@ -35,7 +43,9 @@ class TwinContinuousQCritic:
         self.critic_lr = args["critic_lr"]
         self.polyak = args["polyak"]
         self.use_proper_time_limits = args["use_proper_time_limits"]
-        critic_params = itertools.chain(self.critic.parameters(), self.critic2.parameters())
+        critic_params = itertools.chain(
+            self.critic.parameters(), self.critic2.parameters()
+        )
         self.critic_optimizer = torch.optim.Adam(
             critic_params,
             lr=self.critic_lr,
@@ -52,11 +62,15 @@ class TwinContinuousQCritic:
 
     def soft_update(self):
         """Soft update the target networks."""
-        for param_target, param in zip(self.target_critic.parameters(), self.critic.parameters()):
+        for param_target, param in zip(
+            self.target_critic.parameters(), self.critic.parameters()
+        ):
             param_target.data.copy_(
                 param_target.data * (1.0 - self.polyak) + param.data * self.polyak
             )
-        for param_target, param in zip(self.target_critic2.parameters(), self.critic2.parameters()):
+        for param_target, param in zip(
+            self.target_critic2.parameters(), self.critic2.parameters()
+        ):
             param_target.data.copy_(
                 param_target.data * (1.0 - self.polyak) + param.data * self.polyak
             )
@@ -140,11 +154,15 @@ class TwinContinuousQCritic:
         """Restore the model parameters."""
         critic_state_dict = torch.load(str(model_dir) + "/critic_agent" + ".pt")
         self.critic.load_state_dict(critic_state_dict)
-        target_critic_state_dict = torch.load(str(model_dir) + "/target_critic_agent" + ".pt")
+        target_critic_state_dict = torch.load(
+            str(model_dir) + "/target_critic_agent" + ".pt"
+        )
         self.target_critic.load_state_dict(target_critic_state_dict)
         critic_state_dict2 = torch.load(str(model_dir) + "/critic_agent2" + ".pt")
         self.critic2.load_state_dict(critic_state_dict2)
-        target_critic_state_dict2 = torch.load(str(model_dir) + "/target_critic_agent2" + ".pt")
+        target_critic_state_dict2 = torch.load(
+            str(model_dir) + "/target_critic_agent2" + ".pt"
+        )
         self.target_critic2.load_state_dict(target_critic_state_dict2)
 
     def turn_on_grad(self):

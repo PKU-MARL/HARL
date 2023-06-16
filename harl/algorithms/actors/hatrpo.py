@@ -25,7 +25,7 @@ class HATRPO(OnPolicyBase):
             device: (torch.device) device to use for tensor operations.
         """
         assert (
-                act_space.__class__.__name__ != "MultiDiscrete"
+            act_space.__class__.__name__ != "MultiDiscrete"
         ), "only continuous and discrete action space is supported by HATRPO."
         super(HATRPO, self).__init__(args, obs_space, act_space, device)
 
@@ -124,7 +124,9 @@ class HATRPO(OnPolicyBase):
         step_size = 1 / torch.sqrt(shs / self.kl_threshold)[0]
         full_step = step_size * step_dir
 
-        old_actor = StochasticPolicy(self.args, self.obs_space, self.act_space, self.device)
+        old_actor = StochasticPolicy(
+            self.args, self.obs_space, self.act_space, self.device
+        )
         update_model(old_actor, params)
         expected_improve = (loss_grad * full_step).sum(0, keepdim=True)
         expected_improve = expected_improve.data.cpu().numpy()

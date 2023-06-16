@@ -15,7 +15,7 @@ class VNet(nn.Module):
         Args:
             args: (dict) arguments containing relevant model information.
             cent_obs_space: (gym.Space) centralized observation space.
-            device: (torch.device) specifies the device to run on (cpu/gpu).        
+            device: (torch.device) specifies the device to run on (cpu/gpu).
         """
         super(VNet, self).__init__()
         self.hidden_sizes = args["hidden_sizes"]

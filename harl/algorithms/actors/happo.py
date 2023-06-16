@@ -69,7 +69,10 @@ class HAPPO(OnPolicyBase):
             keepdim=True,
         )
         surr1 = imp_weights * adv_targ
-        surr2 = torch.clamp(imp_weights, 1.0 - self.clip_param, 1.0 + self.clip_param) * adv_targ
+        surr2 = (
+            torch.clamp(imp_weights, 1.0 - self.clip_param, 1.0 + self.clip_param)
+            * adv_targ
+        )
 
         if self.use_policy_active_masks:
             policy_action_loss = (
@@ -88,7 +91,9 @@ class HAPPO(OnPolicyBase):
         (policy_loss - dist_entropy * self.entropy_coef).backward()  # add entropy term
 
         if self.use_max_grad_norm:
-            actor_grad_norm = nn.utils.clip_grad_norm_(self.actor.parameters(), self.max_grad_norm)
+            actor_grad_norm = nn.utils.clip_grad_norm_(
+                self.actor.parameters(), self.max_grad_norm
+            )
         else:
             actor_grad_norm = get_grad_norm(self.actor.parameters())
 
@@ -136,7 +141,9 @@ class HAPPO(OnPolicyBase):
                 )
 
             for sample in data_generator:
-                policy_loss, dist_entropy, actor_grad_norm, imp_weights = self.update(sample)
+                policy_loss, dist_entropy, actor_grad_norm, imp_weights = self.update(
+                    sample
+                )
 
                 train_info["policy_loss"] += policy_loss.item()
                 train_info["dist_entropy"] += dist_entropy.item()
