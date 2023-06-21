@@ -14,9 +14,9 @@ HARL algorithms are our novel solutions to achieving effective multi-agent coope
 
 ### Key features
 
-- HARL algorithms achieve coordinated agent updates by employing the *sequential update scheme*, different from the simultaneous update scheme utilized by MAPPO and MADDPG.
-- HARL algorithms enjoy theoretical guarantees of monotonic improvement and convergence to equilibrium, ensuring their efficacy in promoting cooperative behavior among agents.
-- Both on-policy and off-policy HARL algorithms, exemplified by HAPPO and HASAC respectively, demonstrate superior performance across a wide range of benchmarks.
+- HARL algorithms achieve coordinated agent updates by employing the *sequential update scheme*, different from the *simultaneous update scheme* utilized by MAPPO and MADDPG.
+- HARL algorithms enjoy theoretical guarantees of **monotonic improvement** and **convergence to equilibrium**, ensuring their efficacy in promoting cooperative behavior among agents.
+- Both on-policy and off-policy HARL algorithms, exemplified by **HAPPO** and **HASAC** respectively, demonstrate superior performance across a wide range of benchmarks.
 
 The following figure is an illustration of the *sequential update scheme*
 <div align="center">
