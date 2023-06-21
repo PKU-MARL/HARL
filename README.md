@@ -10,13 +10,20 @@ This repository contains the **official implementation** of **Heterogeneous-Agen
 
 ## Overview
 
-HARL algorithms are our novel solutions to achieving effective multi-agent cooperation in the general *heterogeneous-agent* settings, without relying on the restrictive *parameter-sharing* trick. As shown in our first paper, HARL algorithms with the standard MARL objective enjoy the **monotonic improvement of joint return** and **convergence to Nash Equilibrium (NE)** guarantees granted by the provably correct **Heterogeneous-Agent Trust Region Learning (HATRL)** and **Heterogeneous-Agent Mirror Learning (HAML)** theories, thus providing a more robust and stable approach to cooperative multi-agent reinforcement learning. To further enhance exploration, we incorporate the maximum entropy principle into our framework, leading to the development of the **Maximum Entropy Heterogeneous-Agent Mirror Learning (MEHAML)** theory and the HASAC algorithm, as presented in our second paper. We establish that any MEHAML-derived algorithm, including HASAC, possesses the desired properties of **monotonic improvement of joint entropy-regularized objective** and **convergence to quantal response equilibrium (QRE)**. Experiment results confirm their superior effectiveness for coordinating heterogeneous agents compared to strong baselines such as MAPPO and QMIX. The following figure is an illustration of the *sequential update scheme* employed by HARL algorithms to achieve coordinated agent updates.
+HARL algorithms are our novel solutions to achieving effective multi-agent cooperation in the general *heterogeneous-agent* settings, without relying on the restrictive *parameter-sharing* trick. 
 
+### Key features
+
+- HARL algorithms achieve coordinated agent updates by employing the *sequential update scheme*, different from the simultaneous update scheme utilized by MAPPO and MADDPG.
+- HARL algorithms enjoy theoretical guarantees of monotonic improvement and convergence to equilibrium, ensuring their efficacy in promoting cooperative behavior among agents.
+- Both on-policy and off-policy HARL algorithms, exemplified by HAPPO and HASAC respectively, demonstrate superior performance across a wide range of benchmarks.
+
+The following figure is an illustration of the *sequential update scheme*
 <div align="center">
   <img src="./assets/maad_sus_3_23.png" width="100%"/>
 </div>
 
-For more details, please refer to [our papers](http://arxiv.org/abs/2304.09870) (HASAC paper coming soon).
+For more details, please refer to our [HARL](http://arxiv.org/abs/2304.09870) and [MEHAML](https://arxiv.org/abs/2306.10715) papers.
 
 
 ## Installation
@@ -273,7 +280,7 @@ HAPPO consistently outperforms MAPPO, and is also better than the single-agent b
 
 ## Citation
 
-If you find our paper or this repository helpful in your research or project, please consider citing our work using the following BibTeX citation:
+If you find our paper or this repository helpful in your research or project, please consider citing our works using the following BibTeX citation:
 
 ```tex
 @misc{zhong2023heterogeneousagent,
@@ -283,5 +290,15 @@ If you find our paper or this repository helpful in your research or project, pl
       eprint={2304.09870},
       archivePrefix={arXiv},
       primaryClass={cs.LG}
+}
+```
+```tex
+@misc{liu2023maximum,
+      title={Maximum Entropy Heterogeneous-Agent Mirror Learning}, 
+      author={Jiarong Liu and Yifan Zhong and Siyi Hu and Haobo Fu and Qiang Fu and Xiaojun Chang and Yaodong Yang},
+      year={2023},
+      eprint={2306.10715},
+      archivePrefix={arXiv},
+      primaryClass={cs.MA}
 }
 ```
