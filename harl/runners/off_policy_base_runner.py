@@ -556,8 +556,12 @@ class OffPolicyBaseRunner:
                 if eval_dones_env[eval_i]:
                     eval_episode += 1
                     if "smac" in self.args["env"]:
-                        if eval_infos[eval_i][0]["won"]:
-                            eval_battles_won += 1
+                        if "v2" in self.args["env"]:
+                            if eval_infos[eval_i][0]["battle_won"]:
+                                eval_battles_won += 1
+                        else:
+                            if eval_infos[eval_i][0]["won"]:
+                                eval_battles_won += 1
                     if "football" in self.args["env"]:
                         if eval_infos[eval_i][0]["score_reward"] > 0:
                             eval_score_cnt += 1
