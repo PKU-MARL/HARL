@@ -276,7 +276,7 @@ HAPPO consistently outperforms MAPPO, and is also better than the single-agent b
   <img src="./assets/dexhands_learning_curve.jpg" width="100%"/>
 </div>
 
-*The experiment results of HASAC will be updated soon.*
+*The experiment results of HASAC can be found at https://sites.google.com/view/mehaml*
 
 ## Citation
 
