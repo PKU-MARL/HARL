@@ -26,6 +26,8 @@ train:
   log_interval: ~
   # evaluation interval
   eval_interval: 10000
+  # whether to use ValueNorm
+  use_valuenorm: True
   # whether to use linear learning rate decay
   use_linear_lr_decay: False
   # whether to consider the case of truncation when an episode is done
@@ -50,8 +52,14 @@ model:
   hidden_sizes: [128, 128]
   # activation function, choose from sigmoid, tanh, relu, leaky_relu, selu
   activation_func: relu
+  # whether to use feature normalization
+  use_feature_normalization: True
   # final activation function, choose from sigmoid, tanh, relu, leaky_relu, selu
   final_activation_func: tanh
+  # initialization method for network parameters, choose from xavier_uniform_, orthogonal_, ...
+  initialization_method: orthogonal_
+  # gain of the output layer of the network.
+  gain: 0.01
   # optimizer parameters
   # actor learning rate
   lr: 0.0005
@@ -76,6 +84,12 @@ algo:
   policy_freq: 2
   # the number of steps to look ahead
   n_step: 1
+  # whether to use huber loss
+  use_huber_loss: True
+  # whether to use policy active masks
+  use_policy_active_masks: True
+  # huber delta
+  huber_delta: 10.0
   # whether to share parameter among actors
   share_param: False
   # whether to use a fixed optimisation order

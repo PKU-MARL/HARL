@@ -478,34 +478,27 @@ class OffPolicyBaseRunner:
         Returns:
             actions: (np.ndarray) agent actions, shape is (n_threads, n_agents, dim)
         """
-        if self.args["algo"] == "hasac":
-            actions = []
-            for agent_id in range(self.num_agents):
-                if (
-                    len(np.array(available_actions).shape) == 3
-                ):  # (n_threads, n_agents, action_number)
-                    actions.append(
-                        _t2n(
-                            self.actor[agent_id].get_actions(
-                                obs[:, agent_id],
-                                available_actions[:, agent_id],
-                                add_random,
-                            )
-                        )
-                    )
-                else:  # (n_threads, ) of None
-                    actions.append(
-                        _t2n(
-                            self.actor[agent_id].get_actions(
-                                obs[:, agent_id], stochastic=add_random
-                            )
-                        )
-                    )
-        else:
-            actions = []
-            for agent_id in range(self.num_agents):
+        actions = []
+        for agent_id in range(self.num_agents):
+            if (
+                len(np.array(available_actions).shape) == 3
+            ):  # (n_threads, n_agents, action_number)
                 actions.append(
-                    _t2n(self.actor[agent_id].get_actions(obs[:, agent_id], add_random))
+                    _t2n(
+                        self.actor[agent_id].get_actions(
+                            obs[:, agent_id],
+                            available_actions[:, agent_id],
+                            add_random,
+                        )
+                    )
+                )
+            else:  # (n_threads, ) of None
+                actions.append(
+                    _t2n(
+                        self.actor[agent_id].get_actions(
+                            obs[:, agent_id], None, add_random
+                        )
+                    )
                 )
         return np.array(actions).transpose(1, 0, 2)
 

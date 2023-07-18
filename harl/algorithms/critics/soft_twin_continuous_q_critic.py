@@ -28,7 +28,6 @@ class SoftTwinContinuousQCritic(TwinContinuousQCritic):
             args, share_obs_space, act_space, num_agents, state_type, device
         )
 
-        self.tpdv_a = dict(dtype=torch.int64, device=device)
         self.auto_alpha = args["auto_alpha"]
         if self.auto_alpha:
             self.log_alpha = torch.zeros(1, requires_grad=True, device=device)
@@ -38,9 +37,6 @@ class SoftTwinContinuousQCritic(TwinContinuousQCritic):
             self.alpha = torch.exp(self.log_alpha.detach())
         else:
             self.alpha = args["alpha"]
-        self.use_policy_active_masks = args["use_policy_active_masks"]
-        self.use_huber_loss = args["use_huber_loss"]
-        self.huber_delta = args["huber_delta"]
 
     def update_alpha(self, logp_actions, target_entropy):
         """Auto-tune the temperature parameter alpha."""
@@ -96,6 +92,7 @@ class SoftTwinContinuousQCritic(TwinContinuousQCritic):
         assert actions.__class__.__name__ == "ndarray"
         assert reward.__class__.__name__ == "ndarray"
         assert done.__class__.__name__ == "ndarray"
+        assert valid_transition.__class__.__name__ == "ndarray"
         assert term.__class__.__name__ == "ndarray"
         assert next_share_obs.__class__.__name__ == "ndarray"
         assert gamma.__class__.__name__ == "ndarray"
