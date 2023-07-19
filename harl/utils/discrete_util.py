@@ -4,6 +4,29 @@ from torch.autograd import Variable
 import numpy as np
 
 
+def get_onehot_actions(actions, num_agents, action_type, act_spaces):
+    """
+    Given batch of actions, return one-hot actions
+    """
+    onehot_actions = []
+    for agent_id in range(num_agents):
+        if action_type == "MultiDiscrete":
+            action_dims = act_spaces[agent_id].nvec
+            onehot_action = []
+            for dim in range(len(action_dims)):
+                onehot = F.one_hot(
+                    actions[agent_id, :, dim], num_classes=action_dims[dim]
+                )
+                onehot_action.append(onehot)
+            onehot_action = torch.cat(onehot_action, dim=-1)
+        else:
+            onehot_action = F.one_hot(
+                actions[agent_id], num_classes=act_spaces[agent_id].n
+            )
+        onehot_actions.append(torch.squeeze(onehot_action, dim=1))
+    return onehot_actions
+
+
 def onehot_from_logits(logits, eps=0.0):
     """
     Given batch of logits, return one-hot sample using epsilon greedy strategy

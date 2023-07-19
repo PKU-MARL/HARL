@@ -1,7 +1,9 @@
 """Runner for off-policy MA algorithms"""
 import copy
 import torch
+import torch.nn.functional as F
 from harl.runners.off_policy_base_runner import OffPolicyBaseRunner
+from harl.utils.discrete_util import get_onehot_actions
 
 
 class OffPolicyMARunner(OffPolicyBaseRunner):
@@ -56,6 +58,11 @@ class OffPolicyMARunner(OffPolicyBaseRunner):
             # actions shape: (n_agents, batch_size, dim)
             for agent_id in range(self.num_agents):
                 actions = copy.deepcopy(torch.tensor(sp_actions)).to(self.device)
+                if self.action_type != "Box":
+                    actions = actions.to(dtype=torch.int64)
+                    actions = get_onehot_actions(
+                        actions, self.num_agents, self.action_type, self.action_spaces
+                    )
                 self.actor[agent_id].turn_on_grad()
                 # train this agent
                 actions[agent_id] = self.actor[agent_id].get_actions(
@@ -66,7 +73,6 @@ class OffPolicyMARunner(OffPolicyBaseRunner):
                     add_noise=False,
                     onehot=True,
                 )
-                actions_list = [a for a in actions]
                 if self.state_type == "EP":
                     actions_t = torch.cat(actions, dim=-1)
                 elif self.state_type == "FP":

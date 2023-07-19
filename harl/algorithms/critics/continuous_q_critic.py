@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from harl.models.value_function_models.continuous_q_net import ContinuousQNet
 from harl.utils.envs_tools import check
 from harl.utils.models_tools import update_linear_schedule
+from harl.utils.discrete_util import get_onehot_actions
 
 
 class ContinuousQCritic:
@@ -110,28 +111,12 @@ class ContinuousQCritic:
         share_obs = check(share_obs).to(**self.tpdv)
         if self.action_type == "Box":
             actions = check(actions).to(**self.tpdv)
-            actions = torch.cat([actions[i] for i in range(actions.shape[0])], dim=-1)
         else:
             actions = check(actions).to(**self.tpdv_a)
-            one_hot_actions = []
-            for agent_id in range(len(actions)):
-                if self.action_type == "MultiDiscrete":
-                    action_dims = self.act_space[agent_id].nvec
-                    one_hot_action = []
-                    for dim in range(len(action_dims)):
-                        one_hot = F.one_hot(
-                            actions[agent_id, :, dim], num_classes=action_dims[dim]
-                        )
-                        one_hot_action.append(one_hot)
-                    one_hot_action = torch.cat(one_hot_action, dim=-1)
-                else:
-                    one_hot_action = F.one_hot(
-                        actions[agent_id], num_classes=self.act_space[agent_id].n
-                    )
-                one_hot_actions.append(one_hot_action)
-            actions = torch.squeeze(torch.cat(one_hot_actions, dim=-1), dim=1).to(
-                **self.tpdv_a
+            actions = get_onehot_actions(
+                actions, self.num_agents, self.action_type, self.act_space
             )
+        actions = torch.cat([actions[i] for i in range(self.num_agents)], dim=-1)
         if self.state_type == "FP":
             actions = torch.tile(actions, (self.num_agents, 1))
         reward = check(reward).to(**self.tpdv)
