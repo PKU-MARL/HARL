@@ -73,11 +73,12 @@ class OffPolicyMARunner(OffPolicyBaseRunner):
                     add_noise=False,
                     onehot=True,
                 )
+                actions_list = [a for a in actions]
                 if self.state_type == "EP":
-                    actions_t = torch.cat(actions, dim=-1)
+                    actions_t = torch.cat(actions_list, dim=-1)
                 elif self.state_type == "FP":
                     actions_t = torch.tile(
-                        torch.cat(actions, dim=-1), (self.num_agents, 1)
+                        torch.cat(actions_list, dim=-1), (self.num_agents, 1)
                     )
                 value_pred = self.critic.get_values(sp_share_obs, actions_t)
                 if self.algo_args["algo"]["use_policy_active_masks"]:
