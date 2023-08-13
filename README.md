@@ -33,7 +33,7 @@ For more details, please refer to our [HARL](http://arxiv.org/abs/2304.09870) an
 ```shell
 conda create -n harl python=3.8
 conda activate harl
-# install pytorch>=1.9.0 (CUDA>=11.0) manually
+# Install pytorch>=1.9.0 (CUDA>=11.0) manually
 git clone https://github.com/PKU-MARL/HARL.git
 cd HARL
 pip install -e .
@@ -84,14 +84,14 @@ pip install supersuit==3.7.0
 **Install Gym Suite (Except MuJoCo)**
 
 ```shell
-# gym
+# Install gym
 pip install gym
-# classic control
+# Install classic control
 pip install gym[classic_control]
-# box2d
+# Install box2d
 conda install -c anaconda swig
 pip install gym[box2d]
-# atari
+# Install atari
 pip install --upgrade pip setuptools wheel
 pip install opencv-python
 pip install atari-py
