@@ -20,7 +20,7 @@ HARL algorithms are our novel solutions to achieving effective multi-agent coope
 
 The following figure is an illustration of the *sequential update scheme*
 <div align="center">
-  <img src="./assets/maad_sus_3_23.png" width="100%"/>
+  <img src="./assets/maad_sus_8_20_have_white_background.jpg" width="100%"/>
 </div>
 
 For more details, please refer to our [HARL](http://arxiv.org/abs/2304.09870) and [MEHAML](https://arxiv.org/abs/2306.10715) papers.
