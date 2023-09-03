@@ -195,61 +195,26 @@ class OnPolicyActorBuffer:
         # shuffle indices
         perm = torch.randperm(n_rollout_threads).numpy()
 
+        T, N = self.episode_length, num_envs_per_batch
+
         # prepare data for each mini batch
-        for start_ind in range(0, n_rollout_threads, num_envs_per_batch):
-            obs_batch = []
-            rnn_states_batch = []
-            actions_batch = []
-            available_actions_batch = []
-            masks_batch = []
-            active_masks_batch = []
-            old_action_log_probs_batch = []
-            adv_targ = []
-            factor_batch = []
-            # put data from different environments into the same mini batch
-            for offset in range(num_envs_per_batch):
-                ind = perm[start_ind + offset]
-                obs_batch.append(self.obs[:-1, ind])
-                rnn_states_batch.append(self.rnn_states[0:1, ind])  # only need the first state
-                actions_batch.append(self.actions[:, ind])
-                if self.available_actions is not None:
-                    available_actions_batch.append(self.available_actions[:-1, ind])
-                masks_batch.append(self.masks[:-1, ind])
-                active_masks_batch.append(self.active_masks[:-1, ind])
-                old_action_log_probs_batch.append(self.action_log_probs[:, ind])
-                adv_targ.append(advantages[:, ind])
-                if self.factor is not None:
-                    factor_batch.append(self.factor[:, ind])
-
-            T, N = self.episode_length, num_envs_per_batch
-            # These are all ndarrays of shape (episode_length, num_envs_per_batch, *dim)
-            obs_batch = np.stack(obs_batch, 1)
-            actions_batch = np.stack(actions_batch, 1)
+        for batch_id in range(actor_num_mini_batch):
+            start_id = batch_id * num_envs_per_batch
+            ids = perm[start_id : start_id + num_envs_per_batch]
+            obs_batch = _flatten(T, N, self.obs[:-1, ids])
+            actions_batch = _flatten(T, N, self.actions[:, ids])
+            masks_batch = _flatten(T, N, self.masks[:-1, ids])
+            active_masks_batch = _flatten(T, N, self.active_masks[:-1, ids])
+            old_action_log_probs_batch = _flatten(T, N, self.action_log_probs[:, ids])
+            adv_targ = _flatten(T, N, advantages[:, ids])
             if self.available_actions is not None:
-                available_actions_batch = np.stack(available_actions_batch, 1)
-            if self.factor is not None:
-                factor_batch = np.stack(factor_batch, 1)
-            masks_batch = np.stack(masks_batch, 1)
-            active_masks_batch = np.stack(active_masks_batch, 1)
-            old_action_log_probs_batch = np.stack(old_action_log_probs_batch, 1)
-            adv_targ = np.stack(adv_targ, 1)
-
-            # rnn_states_batch is a (num_envs_per_batch, *dim) ndarray
-            rnn_states_batch = np.stack(rnn_states_batch).reshape(N, *self.rnn_states.shape[2:])
-
-            # Flatten the (episode_length, num_envs_per_batch, *dim) ndarrays to (episode_length * num_envs_per_batch, *dim)
-            obs_batch = _flatten(T, N, obs_batch)
-            actions_batch = _flatten(T, N, actions_batch)
-            if self.available_actions is not None:
-                available_actions_batch = _flatten(T, N, available_actions_batch)
+                available_actions_batch = _flatten(T, N, self.available_actions[:-1, ids])
             else:
                 available_actions_batch = None
             if self.factor is not None:
-                factor_batch = _flatten(T, N, factor_batch)
-            masks_batch = _flatten(T, N, masks_batch)
-            active_masks_batch = _flatten(T, N, active_masks_batch)
-            old_action_log_probs_batch = _flatten(T, N, old_action_log_probs_batch)
-            adv_targ = _flatten(T, N, adv_targ)
+                factor_batch = _flatten(T, N, self.factor[:, ids])
+            rnn_states_batch = self.rnn_states[0, ids]
+            
             if self.factor is not None:
                 yield obs_batch, rnn_states_batch, actions_batch, masks_batch, active_masks_batch, old_action_log_probs_batch, adv_targ, available_actions_batch, factor_batch
             else:

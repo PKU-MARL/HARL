@@ -269,41 +269,16 @@ class OnPolicyCriticBufferEP:
         # shuffle indices
         perm = torch.randperm(n_rollout_threads).numpy()
 
-        # prepare data for each mini batch
-        for start_ind in range(0, n_rollout_threads, num_envs_per_batch):
-            share_obs_batch = []
-            rnn_states_critic_batch = []
-            value_preds_batch = []
-            return_batch = []
-            masks_batch = []
-            # put data from different environments into the same mini batch
-            for offset in range(num_envs_per_batch):
-                ind = perm[start_ind + offset]
-                share_obs_batch.append(self.share_obs[:-1, ind])
-                rnn_states_critic_batch.append(
-                    self.rnn_states_critic[0:1, ind]
-                )  # only need the first state
-                value_preds_batch.append(self.value_preds[:-1, ind])
-                return_batch.append(self.returns[:-1, ind])
-                masks_batch.append(self.masks[:-1, ind])
+        T, N = self.episode_length, num_envs_per_batch
 
-            T, N = self.episode_length, num_envs_per_batch
-            # These are all ndarrays of shape (episode_length, num_envs_per_batch, *dim)
-            share_obs_batch = np.stack(share_obs_batch, 1)
-            value_preds_batch = np.stack(value_preds_batch, 1)
-            return_batch = np.stack(return_batch, 1)
-            masks_batch = np.stack(masks_batch, 1)
-
-            # rnn_states_critic_batch is a (num_envs_per_batch, *dim) ndarray
-            rnn_states_critic_batch = np.stack(rnn_states_critic_batch).reshape(
-                N, *self.rnn_states_critic.shape[2:]
-            )
-
-            # Flatten the (episode_length, num_envs_per_batch, *dim) ndarrays to (episode_length * num_envs_per_batch, *dim)
-            share_obs_batch = _flatten(T, N, share_obs_batch)
-            value_preds_batch = _flatten(T, N, value_preds_batch)
-            return_batch = _flatten(T, N, return_batch)
-            masks_batch = _flatten(T, N, masks_batch)
+        for batch_id in range(critic_num_mini_batch):
+            start_id = batch_id * num_envs_per_batch
+            ids = perm[start_id : start_id + num_envs_per_batch]
+            share_obs_batch = _flatten(T, N, self.share_obs[:-1, ids])
+            value_preds_batch = _flatten(T, N, self.value_preds[:-1, ids])
+            return_batch = _flatten(T, N, self.returns[:-1, ids])
+            masks_batch = _flatten(T, N, self.masks[:-1, ids])
+            rnn_states_critic_batch = self.rnn_states_critic[0, ids]
 
             yield share_obs_batch, rnn_states_critic_batch, value_preds_batch, return_batch, masks_batch
 
