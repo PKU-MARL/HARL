@@ -39,7 +39,7 @@ class HADDPG(OffPolicyBase):
         actions = self.actor(obs)
         if add_noise:
             actions += torch.randn_like(actions) * self.expl_noise * self.scale
-            actions = torch.max(torch.min(actions, self.high), self.low)
+            actions = torch.clamp(actions, self.low, self.high)
         return actions
 
     def get_target_actions(self, obs):
