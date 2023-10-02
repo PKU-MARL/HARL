@@ -1,4 +1,9 @@
+"""Football Logger."""
+
+import time
+
 import numpy as np
+
 from harl.common.base_logger import BaseLogger
 
 
@@ -34,8 +39,19 @@ class FootballLogger(BaseLogger):
                 eval_avg_rew, eval_score_rate
             )
         )
+        self.end = time.time()
         self.log_file.write(
-            ",".join(map(str, [self.total_num_steps, eval_avg_rew, eval_score_rate]))
+            ",".join(
+                map(
+                    str,
+                    [
+                        self.total_num_steps,
+                        eval_avg_rew,
+                        eval_score_rate,
+                        self.end - self.start,
+                    ],
+                )
+            )
             + "\n"
         )
         self.log_file.flush()

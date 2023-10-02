@@ -1,6 +1,10 @@
+"""SMAC Logger."""
+
 import time
 from functools import reduce
+
 import numpy as np
+
 from harl.common.base_logger import BaseLogger
 
 
@@ -162,8 +166,19 @@ class SMACLogger(BaseLogger):
                 eval_win_rate, eval_avg_rew
             )
         )
+        self.end = time.time()
         self.log_file.write(
-            ",".join(map(str, [self.total_num_steps, eval_avg_rew, eval_win_rate]))
+            ",".join(
+                map(
+                    str,
+                    [
+                        self.total_num_steps,
+                        eval_avg_rew,
+                        eval_win_rate,
+                        self.end - self.start,
+                    ],
+                )
+            )
             + "\n"
         )
         self.log_file.flush()

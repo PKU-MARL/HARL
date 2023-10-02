@@ -2,6 +2,7 @@
 
 import time
 import os
+
 import numpy as np
 
 
@@ -156,8 +157,12 @@ class BaseLogger:
         self.log_env(eval_env_infos)
         eval_avg_rew = np.mean(self.eval_episode_rewards)
         print("Evaluation average episode reward is {}.\n".format(eval_avg_rew))
+        self.end = time.time()
         self.log_file.write(
-            ",".join(map(str, [self.total_num_steps, eval_avg_rew])) + "\n"
+            ",".join(
+                map(str, [self.total_num_steps, eval_avg_rew, self.end - self.start])
+            )
+            + "\n"
         )
         self.log_file.flush()
 
