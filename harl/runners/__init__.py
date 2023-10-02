@@ -13,5 +13,6 @@ RUNNER_REGISTRY = {
     "hasac": OffPolicyHARunner,
     "had3qn": OffPolicyHARunner,
     "maddpg": OffPolicyMARunner,
+    "matd3": OffPolicyMARunner,
     "mappo": OnPolicyMARunner,
 }
