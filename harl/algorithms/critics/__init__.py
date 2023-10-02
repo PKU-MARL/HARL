@@ -17,4 +17,5 @@ CRITIC_REGISTRY = {
     "hasac": SoftTwinContinuousQCritic,
     "had3qn": DiscreteQCritic,
     "maddpg": ContinuousQCritic,
+    "matd3": TwinContinuousQCritic,
 }
