@@ -20,10 +20,9 @@ class HATD3(HADDPG):
         obs = check(obs).to(**self.tpdv)
         actions = self.target_actor(obs)
         noise = torch.randn_like(actions) * self.policy_noise * self.scale
-        noise = torch.max(
-            torch.min(noise, self.noise_clip * self.scale),
-            -self.noise_clip * self.scale,
+        noise = torch.clamp(
+            noise, -self.noise_clip * self.scale, self.noise_clip * self.scale
         )
         actions += noise
-        actions = torch.max(torch.min(actions, self.high), self.low)
+        actions = torch.clamp(actions, self.low, self.high)
         return actions
