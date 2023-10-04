@@ -69,7 +69,6 @@ def main():
             all_config = json.load(file)
         args["algo"] = all_config["main_args"]["algo"]
         args["env"] = all_config["main_args"]["env"]
-        args["exp_name"] = all_config["main_args"]["exp_name"]
         algo_args = all_config["algo_args"]
         env_args = all_config["env_args"]
     else:  # load config from corresponding yaml file
