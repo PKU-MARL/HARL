@@ -23,7 +23,7 @@ The following figure is an illustration of the *sequential update scheme*
   <img src="./assets/maad_sus_8_20_have_white_background.jpg" width="100%"/>
 </div>
 
-For more details, please refer to our [HARL](http://arxiv.org/abs/2304.09870) and [MEHAML](https://arxiv.org/abs/2306.10715) papers.
+For more details, please refer to our [HARL](http://arxiv.org/abs/2304.09870) and [MEHARL](https://arxiv.org/abs/2306.10715) papers.
 
 
 ## Installation
@@ -294,7 +294,7 @@ If you find our paper or this repository helpful in your research or project, pl
 ```
 ```tex
 @misc{liu2023maximum,
-      title={Maximum Entropy Heterogeneous-Agent Mirror Learning}, 
+      title={Maximum Entropy Heterogeneous-Agent Reinforcement Learning}, 
       author={Jiarong Liu and Yifan Zhong and Siyi Hu and Haobo Fu and Qiang Fu and Xiaojun Chang and Yaodong Yang},
       year={2023},
       eprint={2306.10715},
