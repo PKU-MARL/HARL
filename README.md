@@ -163,7 +163,7 @@ To enable batch running, we allow users to modify yaml configs in the command li
 ```shell
 for seed in $(seq 1 3)
 do
-	python train.py --algo happo --env smac --exp_name text --seed $seed
+	python train.py --algo happo --env smac --exp_name test --seed $seed
 done
 ```
 
