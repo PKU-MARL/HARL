@@ -4,7 +4,7 @@
             "batch_size":	1000,
             "buffer_size":	1000000,
             "expl_noise":	0.1,
-            "fixed_order":	false,
+            "fixed_order":	true,
             "gamma":	0.99,
             "n_step":	20,
             "noise_clip":	0.5,
@@ -64,7 +64,7 @@
         "scenario":	"Walker2d-v2"
     },
     "main_args":	{
-        "algo":	"hatd3",
+        "algo":	"matd3",
         "env":	"mamujoco",
         "exp_name":	"report",
         "load_config":	""

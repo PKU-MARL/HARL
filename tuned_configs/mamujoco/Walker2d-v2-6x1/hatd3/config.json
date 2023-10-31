@@ -6,7 +6,7 @@
             "expl_noise":	0.1,
             "fixed_order":	false,
             "gamma":	0.99,
-            "n_step":	20,
+            "n_step":	25,
             "noise_clip":	0.5,
             "policy_freq":	2,
             "policy_noise":	0.2,
