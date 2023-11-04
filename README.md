@@ -209,16 +209,17 @@ After these steps, you can apply the algorithms immediately as above.
 ### Application Scope of Algorithms
 
 |        | Continuous action space | Discrete action space | Multi Discrete action space |
-|:------:| :---------------------: | :-------------------: |:---------------------------:|
-| HAPPO  | √                       | √                     |              √              |
-| HATRPO | √                       | √                     |                             |
-| HAA2C  | √                       | √                     |              √              |
-| HADDPG | √                       |                       |                             |
-| HATD3  | √                       |                       |                             |
-| HAD3QN |                         | √                     |                             |
-| HASAC  | √                       | √                     |              √              |
-| MAPPO  | √                       | √                     |              √              |
-| MADDPG | √                       |                       |                             |
+| :----: | :---------------------: | :-------------------: | :-------------------------: |
+| HAPPO  |            √            |           √           |              √              |
+| HATRPO |            √            |           √           |                             |
+| HAA2C  |            √            |           √           |              √              |
+| HADDPG |            √            |                       |                             |
+| HATD3  |            √            |                       |                             |
+| HAD3QN |                         |           √           |                             |
+| HASAC  |            √            |           √           |              √              |
+| MAPPO  |            √            |           √           |              √              |
+| MADDPG |            √            |                       |                             |
+| MATD3  |            √            |                       |                             |
 
 
 
@@ -232,7 +233,7 @@ After these steps, you can apply the algorithms immediately as above.
 
 ### MAMuJoCo
 
-HAPPO and HADDPG outperforms MAPPO and MADDPG; HAPPO and HATD3 are the most effective methods for heterogeneous-agent cooperation tasks.
+HAPPO, HADDPG, and HATD3 outperform MAPPO, MADDPG, and MATD3; HAPPO and HATD3 are the most effective methods for heterogeneous-agent cooperation tasks.
 
 <div align="center">
   <img src="./assets/mamujoco_on_policy_learning_curve.jpg" width="100%"/>

@@ -4,11 +4,11 @@
             "batch_size":	1000,
             "buffer_size":	1000000,
             "expl_noise":	0.1,
-            "fixed_order":	false,
+            "fixed_order":	true,
             "gamma":	0.99,
-            "n_step":	20,
+            "n_step":	1,
             "noise_clip":	0.5,
-            "policy_freq":	8,
+            "policy_freq":	2,
             "policy_noise":	0.2,
             "polyak":	0.005,
             "share_param":	false
@@ -19,8 +19,8 @@
             "torch_threads":	4
         },
         "eval":	{
-            "eval_episodes":	40,
-            "n_eval_rollout_threads":	20,
+            "eval_episodes":	20,
+            "n_eval_rollout_threads":	10,
             "use_eval":	true
         },
         "logger":	{
@@ -31,8 +31,8 @@
             "critic_lr":	0.001,
             "final_activation_func":	"tanh",
             "hidden_sizes":	[
-                256,
-                256
+                128,
+                128
             ],
             "lr":	0.0005
         },
@@ -45,11 +45,11 @@
             "seed_specify":	true
         },
         "train":	{
-            "eval_interval":	10000,
+            "eval_interval":	1000,
             "log_interval":	null,
             "model_dir":	null,
-            "n_rollout_threads":	10,
-            "num_env_steps":	10000000,
+            "n_rollout_threads":	20,
+            "num_env_steps":	5000000,
             "train_interval":	50,
             "update_per_train":	1,
             "use_linear_lr_decay":	false,
@@ -58,14 +58,12 @@
         }
     },
     "env_args":	{
-        "agent_conf":	"2x3",
-        "agent_obsk":	0,
-        "episode_limit":	1000,
-        "scenario":	"Walker2d-v2"
+        "continuous_actions":	true,
+        "scenario":	"simple_spread_v2"
     },
     "main_args":	{
-        "algo":	"hatd3",
-        "env":	"mamujoco",
+        "algo":	"matd3",
+        "env":	"pettingzoo_mpe",
         "exp_name":	"report",
         "load_config":	""
     }
