@@ -134,6 +134,8 @@ pip install "glfw>=2.5.1"
 pip install "Cython>=0.29.28"
 ```
 
+Note that [mujoco-py](https://github.com/openai/mujoco-py) is compatible with `mujoco210` (see [this](https://github.com/openai/mujoco-py#install-mujoco)). So please make sure to download `mujoco210` and extract it into the right place.
+
 
 
 ### Solve Dependencies
