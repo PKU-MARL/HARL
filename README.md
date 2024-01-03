@@ -283,12 +283,12 @@ HAPPO consistently outperforms MAPPO, and is also better than the single-agent b
 
 ## Citation
 
-If you find our paper or this repository helpful in your research or project, please consider citing our works using the following BibTeX citation:
+This repository is affiliated with [Peking University](https://www.pku.edu.cn//) and [BIGAI](https://www.bigai.ai/). If you find our paper or this repository helpful in your research or project, please consider citing our works using the following BibTeX citation:
 
 ```tex
 @misc{zhong2023heterogeneousagent,
       title={Heterogeneous-Agent Reinforcement Learning}, 
-      author={Yifan Zhong and Jakub Grudzien Kuba and Siyi Hu and Jiaming Ji and Yaodong Yang},
+      author={Yifan Zhong and Jakub Grudzien Kuba and Xidong Feng and Siyi Hu and Jiaming Ji and Yaodong Yang},
       year={2023},
       eprint={2304.09870},
       archivePrefix={arXiv},
