@@ -9,7 +9,7 @@
             "fixed_order":	false,
             "gamma":	0.99,
             "huber_delta":	10.0,
-            "n_step":	20,
+            "n_step":	10,
             "polyak":	0.005,
             "share_param":	false,
             "use_huber_loss":	false,
@@ -30,7 +30,7 @@
         },
         "model":	{
             "activation_func":	"relu",
-            "critic_lr":	0.0005,
+            "critic_lr":	0.001,
             "final_activation_func":	"tanh",
             "gain":	0.01,
             "hidden_sizes":	[
@@ -38,7 +38,7 @@
                 256
             ],
             "initialization_method":	"orthogonal_",
-            "lr":	0.0005,
+            "lr":	0.001,
             "use_feature_normalization":	true
         },
         "render":	{
@@ -64,12 +64,14 @@
         }
     },
     "env_args":	{
-        "continuous_actions":	false,
-        "scenario":	"simple_speaker_listener_v3"
+        "agent_conf":	"2x3",
+        "agent_obsk":	0,
+        "episode_limit":	1000,
+        "scenario":	"HalfCheetah-v2"
     },
     "main_args":	{
         "algo":	"hasac",
-        "env":	"pettingzoo_mpe",
+        "env":	"mamujoco",
         "exp_name":	"report",
         "load_config":	""
     }

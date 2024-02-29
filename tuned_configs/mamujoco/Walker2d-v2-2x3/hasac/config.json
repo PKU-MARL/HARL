@@ -3,7 +3,7 @@
         "algo":	{
             "alpha":	0.2,
             "alpha_lr":	0.0003,
-            "auto_alpha":	true,
+            "auto_alpha":	false,
             "batch_size":	1000,
             "buffer_size":	1000000,
             "fixed_order":	false,
@@ -30,7 +30,7 @@
         },
         "model":	{
             "activation_func":	"relu",
-            "critic_lr":	0.0005,
+            "critic_lr":	0.001,
             "final_activation_func":	"tanh",
             "gain":	0.01,
             "hidden_sizes":	[
@@ -46,7 +46,7 @@
             "use_render":	false
         },
         "seed":	{
-            "seed":	1,
+            "seed":	2,
             "seed_specify":	true
         },
         "train":	{
@@ -64,12 +64,14 @@
         }
     },
     "env_args":	{
-        "continuous_actions":	false,
-        "scenario":	"simple_speaker_listener_v3"
+        "agent_conf":	"2x3",
+        "agent_obsk":	0,
+        "episode_limit":	1000,
+        "scenario":	"Walker2d-v2"
     },
     "main_args":	{
         "algo":	"hasac",
-        "env":	"pettingzoo_mpe",
+        "env":	"mamujoco",
         "exp_name":	"report",
         "load_config":	""
     }

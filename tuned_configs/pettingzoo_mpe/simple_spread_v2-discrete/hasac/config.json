@@ -54,7 +54,7 @@
             "log_interval":	null,
             "model_dir":	null,
             "n_rollout_threads":	20,
-            "num_env_steps":	20000000,
+            "num_env_steps":	10000000,
             "train_interval":	50,
             "update_per_train":	1,
             "use_linear_lr_decay":	false,
