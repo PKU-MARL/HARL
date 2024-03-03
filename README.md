@@ -23,7 +23,7 @@ The following figure is an illustration of the *sequential update scheme*
   <img src="./assets/maad_sus_8_20_have_white_background.jpg" width="100%"/>
 </div>
 
-For more details, please refer to our [HARL](http://arxiv.org/abs/2304.09870) and [MEHARL](https://arxiv.org/abs/2306.10715) papers.
+For more details, please refer to our [HARL](https://jmlr.org/papers/v25/23-0488.html) and [MEHARL](https://arxiv.org/abs/2306.10715) papers.
 
 
 ## Installation
