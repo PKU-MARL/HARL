@@ -23,7 +23,7 @@ The following figure is an illustration of the *sequential update scheme*
   <img src="./assets/maad_sus_8_20_have_white_background.jpg" width="100%"/>
 </div>
 
-For more details, please refer to our [HARL](https://jmlr.org/papers/v25/23-0488.html) and [MEHARL](https://arxiv.org/abs/2306.10715) papers.
+For more details, please refer to our [HARL](https://jmlr.org/papers/v25/23-0488.html) (JMLR 2024) and [MEHARL](https://openreview.net/forum?id=tmqOhBC4a5) (ICLR 2024 spotlight) papers.
 
 
 ## Installation
@@ -299,12 +299,12 @@ This repository is affiliated with [Peking University](https://www.pku.edu.cn//)
 ```
 
 ```tex
-@misc{liu2023maximum,
-      title={Maximum Entropy Heterogeneous-Agent Reinforcement Learning}, 
-      author={Jiarong Liu and Yifan Zhong and Siyi Hu and Haobo Fu and Qiang Fu and Xiaojun Chang and Yaodong Yang},
-      year={2023},
-      eprint={2306.10715},
-      archivePrefix={arXiv},
-      primaryClass={cs.MA}
+@inproceedings{
+liu2024maximum,
+title={Maximum Entropy Heterogeneous-Agent Reinforcement Learning},
+author={Jiarong Liu and Yifan Zhong and Siyi Hu and Haobo Fu and QIANG FU and Xiaojun Chang and Yaodong Yang},
+booktitle={The Twelfth International Conference on Learning Representations},
+year={2024},
+url={https://openreview.net/forum?id=tmqOhBC4a5}
 }
 ```
