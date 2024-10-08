@@ -149,7 +149,7 @@ class ACTLayer(nn.Module):
                     ).sum() / active_masks.sum()
                 else:
                     dist_entropy = (
-                        action_distribution.entropy() * active_masks
+                        action_distribution.entropy() * active_masks.squeeze(-1)
                     ).sum() / active_masks.sum()
             else:
                 dist_entropy = action_distribution.entropy().mean()
