@@ -148,6 +148,13 @@ pip install pyglet==1.5.0
 pip install importlib-metadata==4.13.0
 ```
 
+If you encounter issues when using `pip install gym==0.21.0`, try using the following command instead:
+
+```
+conda install -c conda-forge gym=0.21.0
+```
+
+
 
 
 ## Usage
