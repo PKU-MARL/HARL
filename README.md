@@ -68,7 +68,7 @@ Please follow [the official instructions](https://github.com/google-research/foo
 
 **Install SMAC**
 
-Please follow [the official instructions](https://github.com/oxwhirl/smac) to install SMAC.
+Please follow [the official instructions](https://github.com/oxwhirl/smac) to install SMAC. We use StarCraft II version 4.10 on Linux.
 
 **Install SMACv2**
 
